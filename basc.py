@@ -4,7 +4,7 @@ import os
 from astropy.io import fits
 import sys
 import re
-from numpy.fft import fft2,ifft2
+from numpy.fft import fft2,ifft2,rfft2,irfft2
 import numpy as np
 from astropy.table import Table
 
@@ -68,22 +68,16 @@ for line in chain:
     f = line[2]
     atoms[y,x] += f*afactor
 
-atomFT = fft2(atoms)
-beamFT = dirtyBeam[0].data[0,0]
+atomFT = rfft2(atoms)
+beamFT = rfft2(dirtyBeam[0].data[0,0])
 beamFT = np.multiply(beamFT, 1./float(np.size(beamFT)))
+result = irfft2(np.multiply(atomFT, beamFT))
 
-dmap = dirtyMap[0].data[0,0]
-#dmapFT = fft2(np.nan_to_num(dmap))
-
-result = ifft2(np.multiply(atomFT, beamFT))
-
-imageout(result.real, "resid.txt")
-imageout(result.imag, "residi.txt")
+imageout(result, "resid.txt")
 imageout(atoms, "atoms.txt")
-imageout(atomFT, "atomsft.txt")
-#imageout(dmapFT, "dmapft.txt")
 
 sqsum = 0.0
+dmap = dirtyMap[0].data[0,0]
 for y in range(ysize):
     for x in range(xsize):
         sqsum = sqsum + (dmap[x,y]-result.real[x,y])**2

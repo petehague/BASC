@@ -50,7 +50,7 @@ for arg in sys.argv[1:]:
     output.close()
     filelist.append(outfile)
 
-os.system("./mcmc {} {} {} {}".format(filelist[0],filelist[1],filelist[2],mapsize))
+os.system(os.path.dirname(os.path.abspath(__file__))+"/mcmc {} {} {} {}".format(filelist[0],filelist[1],filelist[2],mapsize))
 
 dirtyMap = fits.open(sys.argv[1])
 dirtyBeam = fits.open(sys.argv[2])
@@ -85,6 +85,6 @@ sqsum = 0.0
 for y in range(ysize):
     for x in range(xsize):
         sqsum = sqsum + (dmap[x,y]-result.real[x,y])**2
-print("Total residual = {}".format(np.sqrt(sqsum/(xsize*ysize))))
+print("RMS residual = {}".format(np.sqrt(sqsum/(xsize*ysize))))
 
 sys.exit(0)

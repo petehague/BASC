@@ -69,17 +69,19 @@ for line in chain:
     atoms[y,x] += f*afactor
 
 atomFT = fft2(atoms)
+beamFT = dirtyBeam[0].data[0,0]
+beamFT = np.multiply(beamFT, 1./float(np.size(beamFT)))
+
 dmap = dirtyMap[0].data[0,0]
-dmapFT = fft2(np.nan_to_num(dmap))
+#dmapFT = fft2(np.nan_to_num(dmap))
 
-totalFT = dmapFT - atomFT
-
-result = ifft2(totalFT)
+result = ifft2(np.multiply(atomFT, beamFT))
 
 imageout(result.real, "resid.txt")
+imageout(result.imag, "residi.txt")
 imageout(atoms, "atoms.txt")
 imageout(atomFT, "atomsft.txt")
-imageout(dmapFT, "dmapft.txt")
+#imageout(dmapFT, "dmapft.txt")
 
 sqsum = 0.0
 for y in range(ysize):

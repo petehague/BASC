@@ -245,6 +245,33 @@ void skimage::scan(uint32_t psize, double threshold, double stdev) {
   }
 }
 
+//Crops the image to the centre part
+void skimage::crop(uint32_t nx, uint32_t ny) {
+  uint32_t dx = (x_size-nx)/2;
+  uint32_t dy = (y_size-ny)/2;
+  double *newbuffer = new double[nx*ny*f_size];
+  double *oldbuffer = buffer;
+
+  for (auto f=0;f<f_size;f++) {
+    for (auto u=0;u<nx;u++) {
+      for (auto v=0;v<ny;v++) {
+        uint32_t position = f*u*f_size+v*nx*f_size;
+        uint32_t source = f*(u+dx)*f_size+(v+dy)*ny*f_size;
+        newbuffer[position] = oldbuffer[source];
+      }
+    }
+  }
+
+  buffer = newbuffer;
+  x_size = nx;
+  y_size = ny;
+
+  totalsize = x_size*y_size*f_size;
+  fxs = x_size*f_size;
+
+  delete oldbuffer;
+}
+
 //Use to pad out an image to avoid having to have boundary checks in map
 void skimage::pad(uint32_t dx, uint32_t dy, double contents) {
   uint32_t nx = x_size+dx;
@@ -338,7 +365,7 @@ void skimage::add(twov points, double flux) {
   buffer[coords(points.x,points.y,0)] += flux;
 }
 
-//PS This was to get an estimate, this method is not correct
+// This was to get an estimate, this method is not correct
 double skimage::badresidual(double mean, double noise) {
   double result = 0;
 

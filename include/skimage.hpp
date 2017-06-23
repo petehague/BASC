@@ -53,6 +53,7 @@ public:
   double noise();
   double noise(skimage &pbeam);
   void scan(uint32_t psize, double threshold, double stdev);
+  void crop(uint32_t nx, uint32_t ny);
   void pad(uint32_t dx, uint32_t dy, double contents);
   double deconv(skimage &other, twov *points, double *flux, uint32_t n);
   double deconv(skimage &other, skimage &pbeam, twov *points, double *flux, uint32_t n);

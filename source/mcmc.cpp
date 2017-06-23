@@ -24,9 +24,9 @@ struct UserCommonStr {
 void setup(string mapfile, string psffile, string pbcorfile) {
   fstream imagefile;
   uint16_t y=0;
+  uint32_t beamsize;
 
   dirtyMap.init(imagesize,imagesize,1);
-  dirtyBeam.init(imagesize,imagesize,1);
   primaryBeam.init(imagesize,imagesize,1);
 
   imagefile.open(mapfile, fstream::in);
@@ -39,19 +39,6 @@ void setup(string mapfile, string psffile, string pbcorfile) {
     }
   }
   imagefile.close();
-
-  y=0;
-  imagefile.open(psffile, fstream::in);
-  for (string line; getline(imagefile, line); y++) {
-    stringstream linestream(line);
-    for (auto x=0;x<imagesize;x++) {
-      double value;
-      linestream >> value;
-      dirtyBeam.set(y,x,0,value);
-    }
-  }
-  imagefile.close();
-  dirtyBeam.pad(imagesize,imagesize,0);
 
   y=0;
   imagefile.open(pbcorfile, fstream::in);
@@ -67,16 +54,45 @@ void setup(string mapfile, string psffile, string pbcorfile) {
 
   primaryBeam.unnan();
 
-  //primaryBeam.scan(16,primaryBeam.max()/2,primaryBeam.max()/4);
+  imagefile.open(psffile, fstream::in);
+  beamsize = 0;
+  for (string line; getline(imagefile, line); beamsize++);
+  imagefile.close();
+  imagefile.open(psffile, fstream::in);
+
+  dirtyBeam.init(beamsize,beamsize,1);
+
+  y = 0;
+  for (string line; getline(imagefile, line); y++) {
+    stringstream linestream(line);
+    for (auto x=0;x<beamsize;x++) {
+      double value;
+      linestream >> value;
+      dirtyBeam.set(y,x,0,value);
+    }
+  }
+  imagefile.close();
+
 
   sigmasq = dirtyMap.noise(primaryBeam);
-  //sigmasq = 0.000086;
+
+  if (beamsize <= imagesize) {
+    // cout << "Beam size " << beamsize << " padded out to " << beamsize+imagesize << endl;
+    // dirtyBeam.pad(imagesize,imagesize,0);
+    dirtyMap.crop(beamsize/2, beamsize/2);
+    primaryBeam.crop(beamsize/2, beamsize/2);
+    cout << "Image size " << imagesize << " cropped to " << beamsize/2 << endl;
+    imagesize = beamsize/2;
+  }
+
+  //dirtyBeam.scan(32,dirtyBeam.max()/1000,dirtyBeam.max()/10000);
+
+  sigmasq = dirtyMap.noise(primaryBeam);
   dirtyMap.setnoise(sigmasq);
   cout << "Noise = " << sigmasq << " Jy/Beam" << endl;
-  //sigmasq = 0.000083;
   sigmasq *= sigmasq;
 
-  fluxscale = dirtyMap.fluxscale(dirtyBeam);
+  //fluxscale = dirtyMap.fluxscale(dirtyBeam);
   fluxscale = sqrt(sigmasq);
   cout << "Flux Scale = " << fluxscale << endl;
   //fluxscale = 1;
@@ -123,9 +139,9 @@ int UserMonitor(CommonStr *Common, ObjectStr *Members) {
   for (auto k=0;k<Common->ENSEMBLE;k++) {
     Cube = Members[k].Cubes;
     for (auto i=0;i<Members[k].Natoms;i++) {
-      UC->x.push_back(Cube[i][0]);
-      UC->y.push_back(Cube[i][1]);
-      UC->F.push_back(Cube[i][2]);
+      UC->x.push_back(Cube[i][0]*double(imagesize));
+      UC->y.push_back(Cube[i][1]*double(imagesize));
+      UC->F.push_back(fluxscale*(Cube[i][2]/(1.-Cube[i][2])));
     }
   }
 
@@ -180,18 +196,19 @@ int main(int argc, char **argv) {
   elapsed = (double)(std::chrono::duration_cast<std::chrono::milliseconds>(chrono::system_clock::now()-startpoint).count() )/1000.0;
   cout << "Chain time: " << elapsed << "s" << endl;
 
+  cout << "Number of models: " << UserCommon->nmodels << endl;
+  logfile.open("info.txt", fstream::out);
+  logfile << UserCommon->nmodels << endl;
+  logfile.close();
+
   cout << "Return code: " << code << endl;
   cout << "Evidence: " << Common.Evidence << endl;
 
   chainfile.open("chain.txt", fstream::out);
   for (auto i=0;i<UserCommon->x.size();i++) {
     chainfile << UserCommon->x[i] << " " << UserCommon->y[i] << " " << UserCommon->F[i] << endl;
-    dirtyMap.subtract(twov(UserCommon->x[i],UserCommon->y[i]), UserCommon->F[i]/UserCommon->x.size());
   }
   chainfile.close();
-
-  //Quick, dirty and wrong residual calculations
-  //cout << "RMS Residuals: " << dirtyMap.residual(0,1) << " with noise " << dirtyMap.getnoise() << endl;
 
   logfile.open("log.txt", fstream::out);
   atoms = 0;

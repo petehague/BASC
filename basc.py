@@ -4,9 +4,10 @@ import os
 from astropy.io import fits
 import sys
 import re
-from numpy.fft import fft2,ifft2,rfft2,irfft2
+from numpy.fft import fft2, ifft2
 import numpy as np
 from astropy.table import Table
+
 
 def imageout(arr, name):
     sh = arr.shape
@@ -16,22 +17,25 @@ def imageout(arr, name):
     output = open(name, "w")
     for y in range(ymax):
         for x in range(xmax):
-            output.write("{} ".format(float(arr[x,y])))
+            output.write("{} ".format(float(arr[x, y])))
         output.write("\n")
     output.close()
 
 
-if len(sys.argv)<4:
-    print("sf <dirty map> <dirty psf> <dirty primary beam>")
+if len(sys.argv) < 4:
+    print("basc.py <dirty map> <dirty psf> <dirty primary beam>")
     sys.exit(1)
 
-image=fits.open(sys.argv[1])
-mapsize = image[0].header['NAXIS1']
+
+dirtyMap = fits.open(sys.argv[1])
+dirtyBeam = fits.open(sys.argv[2])
+mapsize = dirtyMap[0].header['NAXIS1']
+beamsize = dirtyBeam[0].header['NAXIS1']
 
 filelist = []
 for arg in sys.argv[1:]:
     infile = arg
-    outfile = re.split("\.",infile)[:-1]
+    outfile = re.split("\.", infile)[:-1]
     outfile.append("txt")
     outfile = '.'.join(outfile)
     if os.path.exists(outfile):
@@ -44,43 +48,76 @@ for arg in sys.argv[1:]:
     nx = image[0].header['NAXIS1']
     ny = image[0].header['NAXIS2']
     for y in range(ny):
-      for x in range(nx):
-        output.write(" {}".format(image[0].data[0,0,y,x]))
-      output.write("\n")
+        for x in range(nx):
+            output.write(" {}".format(image[0].data[0, 0, y, x]))
+        output.write("\n")
     output.close()
     filelist.append(outfile)
 
-os.system(os.path.dirname(os.path.abspath(__file__))+"/mcmc {} {} {} {}".format(filelist[0],filelist[1],filelist[2],mapsize))
+os.system(os.path.dirname(os.path.abspath(__file__)) +
+          "/mcmc {} {} {} {}".format(filelist[0],
+                                     filelist[1],
+                                     filelist[2],
+                                     mapsize))
 
-dirtyMap = fits.open(sys.argv[1])
-dirtyBeam = fits.open(sys.argv[2])
 chain = Table.read("chain.txt", format="ascii")
-afactor = 1.0/float(len(chain))
+# afactor = 1.0/float(len(chain))
+nmodels = open("info.txt", "r")
+afactor = 1.0/float(nmodels.readline())
 
-xsize = dirtyMap[0].header['NAXIS1']
-ysize = dirtyMap[0].header['NAXIS2']
+xsize = int(dirtyMap[0].header['NAXIS1'])
+ysize = int(dirtyMap[0].header['NAXIS2'])
+bxsize = int(dirtyBeam[0].header['NAXIS1'])
+bysize = int(dirtyBeam[0].header['NAXIS2'])
 
-atoms = np.zeros(shape=(ysize,xsize), dtype=float)
+inset = 0
+if (xsize == bxsize):
+    xsize = int(xsize/2)
+    ysize = int(ysize/2)
+    inset = bxsize/4
 
+atoms = np.zeros(shape=(bysize, bxsize), dtype=float)
 for line in chain:
-    x = int(line[0]*xsize)
-    y = int(line[1]*ysize)
+    x = int(round(line[0])) + inset
+    y = int(round(line[1])) + inset
     f = line[2]
-    atoms[y,x] += f*afactor
+    atoms[y, x] += f
 
-atomFT = rfft2(atoms)
-beamFT = rfft2(dirtyBeam[0].data[0,0])
-beamFT = np.multiply(beamFT, 1./float(np.size(beamFT)))
-result = irfft2(np.multiply(atomFT, beamFT))
+atoms = np.multiply(atoms, afactor)
+atomFT = np.fft.fftshift(fft2(atoms))
+
+beam = np.zeros(shape=(bysize, bxsize), dtype=float)
+xoff = xsize - bxsize/2
+yoff = ysize - bysize/2
+for x in range(0, bxsize):
+    for y in range(0, bysize):
+        u = int(y-yoff)
+        v = int(x-xoff)
+        if (u > 0 and u < bxsize and v > 0 and v < bysize):
+            beam[y, x] = dirtyBeam[0].data[0, 0, v, u]/float(bxsize*bysize)
+
+beamFT = np.fft.fftshift(fft2(beam))
+result = np.absolute(ifft2(np.fft.ifftshift(np.multiply(atomFT, beamFT))))
+
+imageout(beam, "zbeam.txt")
+imageout(np.absolute(atomFT), "atomft.txt")
+imageout(np.absolute(beamFT), "beamft.txt")
+imageout(np.absolute(atomFT*beamFT), "totalft.txt")
 
 imageout(result, "resid.txt")
 imageout(atoms, "atoms.txt")
+imageout(np.absolute(ifft2(np.fft.ifftshift(atomFT))), "atoms2.txt")
+
+clresult = np.zeros(shape=(ysize, xsize), dtype=float)
+for x in range(0, xsize):
+    for y in range(0, ysize):
+        clresult[y, x] = result[y+ysize/2, x+xsize/2]
 
 sqsum = 0.0
-dmap = dirtyMap[0].data[0,0]
+dmap = dirtyMap[0].data[0, 0]
 for y in range(ysize):
     for x in range(xsize):
-        sqsum = sqsum + (dmap[x,y]-result.real[x,y])**2
+        sqsum = sqsum + (dmap[y, x]-clresult[y, x])**2
 print("RMS residual = {}".format(np.sqrt(sqsum/(xsize*ysize))))
 
 sys.exit(0)

@@ -79,15 +79,15 @@ void setup(string mapfile, string psffile, string pbcorfile) {
   if (beamsize <= imagesize) {
     // cout << "Beam size " << beamsize << " padded out to " << beamsize+imagesize << endl;
     // dirtyBeam.pad(imagesize,imagesize,0);
-    dirtyMap.crop(beamsize/2, beamsize/2);
     primaryBeam.crop(beamsize/2, beamsize/2);
+    dirtyMap.crop(beamsize/2, beamsize/2);
     cout << "Image size " << imagesize << " cropped to " << beamsize/2 << endl;
     imagesize = beamsize/2;
   }
 
   //dirtyBeam.scan(32,dirtyBeam.max()/1000,dirtyBeam.max()/10000);
 
-  sigmasq = dirtyMap.noise(primaryBeam);
+  //sigmasq = dirtyMap.noise(primaryBeam);
   dirtyMap.setnoise(sigmasq);
   cout << "Noise = " << sigmasq << " Jy/Beam" << endl;
   sigmasq *= sigmasq;

@@ -61,7 +61,6 @@ os.system(os.path.dirname(os.path.abspath(__file__)) +
                                      mapsize))
 
 chain = Table.read("chain.txt", format="ascii")
-# afactor = 1.0/float(len(chain))
 nmodels = open("info.txt", "r")
 afactor = 1.0/float(nmodels.readline())
 
@@ -78,8 +77,8 @@ if (xsize == bxsize):
 
 atoms = np.zeros(shape=(bysize, bxsize), dtype=float)
 for line in chain:
-    x = int(round(line[0])) + inset
-    y = int(round(line[1])) + inset
+    x = int(round(line[0]) + inset)
+    y = int(round(line[1]) + inset)
     f = line[2]
     atoms[y, x] += f
 
@@ -111,7 +110,7 @@ imageout(np.absolute(ifft2(np.fft.ifftshift(atomFT))), "atoms2.txt")
 clresult = np.zeros(shape=(ysize, xsize), dtype=float)
 for x in range(0, xsize):
     for y in range(0, ysize):
-        clresult[y, x] = result[y+ysize/2, x+xsize/2]
+        clresult[y, x] = result[int(y+ysize/2), int(x+xsize/2)]
 
 sqsum = 0.0
 dmap = dirtyMap[0].data[0, 0]
@@ -119,5 +118,11 @@ for y in range(ysize):
     for x in range(xsize):
         sqsum = sqsum + (dmap[y, x]-clresult[y, x])**2
 print("RMS residual = {}".format(np.sqrt(sqsum/(xsize*ysize))))
+
+sqsum = 0.0
+for y in range(ysize):
+    for x in range(xsize):
+        sqsum += dmap[y, x]**2
+print("Base residual = {}".format(np.sqrt(sqsum/(xsize*ysize))))
 
 sys.exit(0)

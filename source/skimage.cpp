@@ -255,8 +255,8 @@ void skimage::crop(uint32_t nx, uint32_t ny) {
   for (auto f=0;f<f_size;f++) {
     for (auto u=0;u<nx;u++) {
       for (auto v=0;v<ny;v++) {
-        uint32_t position = f*u*f_size+v*nx*f_size;
-        uint32_t source = f*(u+dx)*f_size+(v+dy)*ny*f_size;
+        uint32_t position = f+u*f_size+v*nx*f_size;
+        uint32_t source = f+(u+dx)*f_size+(v+dy)*y_size*f_size;
         newbuffer[position] = oldbuffer[source];
       }
     }

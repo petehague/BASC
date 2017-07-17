@@ -8,9 +8,11 @@
 #include "../bayesys/bayesys3.h"
 
 skimage dirtyMap, dirtyBeam, primaryBeam;
-double sigmasq, fluxscale;
+double sigmasq, fluxscale, freqscale;
 
-uint32_t imagesize;
+uint32_t imagesize, imagedepth;
+
+bool cubeSwitch = false;
 
 struct UserCommonStr {
   uint32_t nmodels;
@@ -19,6 +21,8 @@ struct UserCommonStr {
   vector <double> x;
   vector <double> y;
   vector <double> F;
+  vector <double> fmu;
+  vector <double> fsig;
 };
 
 void setup(string mapfile, string psffile, string pbcorfile) {
@@ -26,16 +30,18 @@ void setup(string mapfile, string psffile, string pbcorfile) {
   uint16_t y=0;
   uint32_t beamsize;
 
-  dirtyMap.init(imagesize,imagesize,1);
-  primaryBeam.init(imagesize,imagesize,1);
+  dirtyMap.init(imagesize,imagesize,imagedepth);
+  primaryBeam.init(imagesize,imagesize,imagedepth);
 
   imagefile.open(mapfile, fstream::in);
   for (string line; getline(imagefile, line); y++) {
     stringstream linestream(line);
     for (uint16_t x=0;x<imagesize;x++) {
-      double value;
-      linestream >> value;
-      dirtyMap.set(y,x,0,value);
+      for (uint16_t f=0;f<imagedepth;f++) {
+        double value;
+        linestream >> value;
+        dirtyMap.set(y,x,f,value);
+      }
     }
   }
   imagefile.close();
@@ -45,9 +51,11 @@ void setup(string mapfile, string psffile, string pbcorfile) {
   for (string line; getline(imagefile, line); y++) {
     stringstream linestream(line);
     for (auto x=0;x<imagesize;x++) {
-      double value;
-      linestream >> value;
-      primaryBeam.set(y,x,0,value);
+      for (uint16_t f=0;f<imagedepth;f++) {
+        double value;
+        linestream >> value;
+        primaryBeam.set(y,x,f,value);
+      }
     }
   }
   imagefile.close();
@@ -66,9 +74,11 @@ void setup(string mapfile, string psffile, string pbcorfile) {
   for (string line; getline(imagefile, line); y++) {
     stringstream linestream(line);
     for (auto x=0;x<beamsize;x++) {
-      double value;
-      linestream >> value;
-      dirtyBeam.set(y,x,0,value);
+      for (uint16_t f=0;f<imagedepth;f++) {
+        double value;
+        linestream >> value;
+        dirtyBeam.set(y,x,f,value);
+      }
     }
   }
   imagefile.close();
@@ -102,6 +112,8 @@ extern "C" {
 int UserBuild(double *like, CommonStr *Common, ObjectStr* Member, int natoms, int dummy) {
   vector <twov> points;
   vector <double> flux;
+  vector <double> fmu;
+  vector <double> fsig;
   double **Cube = Member->Cubes;
   UserCommonStr *UC = (UserCommonStr *)Common->UserCommon;
 
@@ -115,6 +127,15 @@ int UserBuild(double *like, CommonStr *Common, ObjectStr* Member, int natoms, in
     double y = Cube[i][1]*double(imagesize);
     points.push_back(twov(x,y));
     flux.push_back(fluxscale*Cube[i][2]/(1.-Cube[i][2]));
+    if (cubeSwitch) {
+      fmu.push_back(Cube[i][3]*freqscale);
+      fsig.push_back(Cube[i][4]*freqscale);
+    }
+  }
+
+  if (cubeSwitch) {
+    *like = dirtyMap.deconv(dirtyBeam,primaryBeam,&points[0],&flux[0],&fmu[0],&fsig[0],flux.size());
+    return 1;
   }
 
   *like = dirtyMap.deconv(dirtyBeam,primaryBeam,&points[0],&flux[0],flux.size());
@@ -142,6 +163,10 @@ int UserMonitor(CommonStr *Common, ObjectStr *Members) {
       UC->x.push_back(Cube[i][0]*double(imagesize));
       UC->y.push_back(Cube[i][1]*double(imagesize));
       UC->F.push_back(fluxscale*(Cube[i][2]/(1.-Cube[i][2])));
+      if (cubeSwitch) {
+        UC->fmu.push_back(Cube[i][3]*freqscale);
+        UC->fsig.push_back(Cube[i][4]*freqscale);
+      }
     }
   }
 
@@ -169,6 +194,9 @@ int main(int argc, char **argv) {
 
   imagesize = stoi(argv[4]);
   cout << "Map size: " << imagesize << endl;
+  imagedepth = stoi(argv[5]);
+  cout << "Number of frequency channels: " << imagedepth << endl;
+  if (imagedepth>1) { cubeSwitch = true; }
 
   setup(argv[1],argv[2],argv[3]);
 
@@ -206,7 +234,11 @@ int main(int argc, char **argv) {
 
   chainfile.open("chain.txt", fstream::out);
   for (auto i=0;i<UserCommon->x.size();i++) {
-    chainfile << UserCommon->x[i] << " " << UserCommon->y[i] << " " << UserCommon->F[i] << endl;
+    chainfile << UserCommon->x[i] << " " << UserCommon->y[i] << " " << UserCommon->F[i];
+    if (cubeSwitch) {
+      chainfile << " " << UserCommon->fmu[i] << " " << UserCommon->fsig[i];
+    }
+    chainfile << endl;
   }
   chainfile.close();
 

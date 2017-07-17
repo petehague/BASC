@@ -30,6 +30,7 @@ if len(sys.argv) < 4:
 dirtyMap = fits.open(sys.argv[1])
 dirtyBeam = fits.open(sys.argv[2])
 mapsize = dirtyMap[0].header['NAXIS1']
+mapdepth = dirtyMap[0].header['NAXIS3']
 beamsize = dirtyBeam[0].header['NAXIS1']
 
 filelist = []
@@ -47,18 +48,21 @@ for arg in sys.argv[1:]:
     output = open(outfile, "w")
     nx = image[0].header['NAXIS1']
     ny = image[0].header['NAXIS2']
+    nf = image[0].header['NAXIS3']
     for y in range(ny):
         for x in range(nx):
-            output.write(" {}".format(image[0].data[0, 0, y, x]))
+            for f in range(nf):
+                output.write(" {}".format(image[0].data[0, f, y, x]))
         output.write("\n")
     output.close()
     filelist.append(outfile)
 
 os.system(os.path.dirname(os.path.abspath(__file__)) +
-          "/mcmc {} {} {} {}".format(filelist[0],
-                                     filelist[1],
-                                     filelist[2],
-                                     mapsize))
+          "/mcmc {} {} {} {} {}".format(filelist[0],
+                                        filelist[1],
+                                        filelist[2],
+                                        mapsize,
+                                        mapdepth))
 
 chain = Table.read("chain.txt", format="ascii")
 nmodels = open("info.txt", "r")

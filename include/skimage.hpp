@@ -56,6 +56,7 @@ public:
   void crop(uint32_t nx, uint32_t ny);
   void pad(uint32_t dx, uint32_t dy, double contents);
   double deconv(skimage &other, twov *points, double *flux, uint32_t n);
+  double deconv(skimage &other, skimage &pbeam, twov *points, double *flux, double *fmu, double *fsig, uint32_t n);
   double deconv(skimage &other, skimage &pbeam, twov *points, double *flux, uint32_t n);
   void subbeam(skimage &other, twov points, double flux);
   void subtract(twov points, double flux);

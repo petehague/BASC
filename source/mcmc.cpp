@@ -177,7 +177,7 @@ int UserMonitor(CommonStr *Common, ObjectStr *Members) {
   if (Common->cool < 1.) {
     UC->burnin += 1;
     if (Common->cool>UC->cool) {
-      cout << Common->cool << " " << UC->burnin << endl;
+      //cout << Common->cool << " " << UC->burnin << endl;
       UC->cool += 0.1;
     }
     return 0;

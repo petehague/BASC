@@ -7,11 +7,12 @@ import re
 from numpy.fft import fft2, ifft2
 import numpy as np
 from astropy.table import Table
+import matplotlib.pyplot as plt
 
 
 def imageout(arr, name):
     sh = arr.shape
-    xmax = sh[0]
+    '''xmax = sh[0]
     ymax = sh[1]
 
     output = open(name, "w")
@@ -19,8 +20,8 @@ def imageout(arr, name):
         for x in range(xmax):
             output.write("{} ".format(float(arr[x, y])))
         output.write("\n")
-    output.close()
-
+    output.close()'''
+    plt.imsave(name+".png", arr)
 
 if len(sys.argv) < 4:
     print("basc.py <dirty map> <dirty psf> <dirty primary beam>")
@@ -102,14 +103,14 @@ for x in range(0, bxsize):
 beamFT = np.fft.fftshift(fft2(beam))
 result = np.absolute(ifft2(np.fft.ifftshift(np.multiply(atomFT, beamFT))))
 
-imageout(beam, "zbeam.txt")
-imageout(np.absolute(atomFT), "atomft.txt")
-imageout(np.absolute(beamFT), "beamft.txt")
-imageout(np.absolute(atomFT*beamFT), "totalft.txt")
+imageout(beam, "zbeam")
+imageout(np.absolute(atomFT), "atomft")
+imageout(np.absolute(beamFT), "beamft")
+imageout(np.absolute(atomFT*beamFT), "totalft")
 
-imageout(result, "resid.txt")
-imageout(atoms, "atoms.txt")
-imageout(np.absolute(ifft2(np.fft.ifftshift(atomFT))), "atoms2.txt")
+imageout(result, "resid")
+imageout(atoms, "atoms")
+imageout(np.absolute(ifft2(np.fft.ifftshift(atomFT))), "atoms2")
 
 clresult = np.zeros(shape=(ysize, xsize), dtype=float)
 for x in range(0, xsize):
@@ -121,12 +122,12 @@ dmap = dirtyMap[0].data[0, 0]
 for y in range(ysize):
     for x in range(xsize):
         sqsum = sqsum + (dmap[y, x]-clresult[y, x])**2
-print("RMS residual = {}".format(np.sqrt(sqsum/(xsize*ysize))))
+print("RMS residual: {}".format(np.sqrt(sqsum/(xsize*ysize))))
 
-sqsum = 0.0
+'''sqsum = 0.0
 for y in range(ysize):
     for x in range(xsize):
         sqsum += dmap[y, x]**2
-print("Base residual = {}".format(np.sqrt(sqsum/(xsize*ysize))))
+print("Base residual = {}".format(np.sqrt(sqsum/(xsize*ysize))))'''
 
 sys.exit(0)

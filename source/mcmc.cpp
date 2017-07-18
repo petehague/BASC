@@ -8,6 +8,7 @@
 #include "../bayesys/bayesys3.h"
 
 skimage dirtyMap, dirtyBeam, primaryBeam;
+skimage flatDirtyMap, flatDirtyBeam, flatPrimaryBeam;
 double sigmasq, fluxscale, freqscale;
 
 uint32_t imagesize, imagedepth;
@@ -17,6 +18,8 @@ bool cubeSwitch = false;
 struct UserCommonStr {
   uint32_t nmodels;
   uint32_t maxmodels;
+  uint32_t burnin;
+  double cool;
   vector <uint16_t> natoms;
   vector <double> x;
   vector <double> y;
@@ -33,15 +36,23 @@ void setup(string mapfile, string psffile, string pbcorfile) {
   dirtyMap.init(imagesize,imagesize,imagedepth);
   primaryBeam.init(imagesize,imagesize,imagedepth);
 
+  if (imagedepth>1) {
+    flatDirtyMap.init(imagesize, imagesize, 1);
+    flatPrimaryBeam.init(imagesize, imagesize, 1);
+  }
+
   imagefile.open(mapfile, fstream::in);
   for (string line; getline(imagefile, line); y++) {
     stringstream linestream(line);
     for (uint16_t x=0;x<imagesize;x++) {
+      double total = 0;
       for (uint16_t f=0;f<imagedepth;f++) {
         double value;
         linestream >> value;
+        total += value;
         dirtyMap.set(y,x,f,value);
       }
+      if (imagedepth>1) flatDirtyMap.set(y,x,0,1);
     }
   }
   imagefile.close();
@@ -51,11 +62,14 @@ void setup(string mapfile, string psffile, string pbcorfile) {
   for (string line; getline(imagefile, line); y++) {
     stringstream linestream(line);
     for (auto x=0;x<imagesize;x++) {
+      double total = 0;
       for (uint16_t f=0;f<imagedepth;f++) {
         double value;
         linestream >> value;
+        total += value;
         primaryBeam.set(y,x,f,value);
       }
+      if (imagedepth>1) flatPrimaryBeam.set(y,x,0,1);
     }
   }
   imagefile.close();
@@ -68,17 +82,24 @@ void setup(string mapfile, string psffile, string pbcorfile) {
   imagefile.close();
   imagefile.open(psffile, fstream::in);
 
-  dirtyBeam.init(beamsize,beamsize,1);
+  dirtyBeam.init(beamsize,beamsize,imagedepth);
+
+  if (imagedepth>1) {
+    flatDirtyBeam.init(beamsize, beamsize, 1);
+  }
 
   y = 0;
   for (string line; getline(imagefile, line); y++) {
     stringstream linestream(line);
     for (auto x=0;x<beamsize;x++) {
+      double total = 0;
       for (uint16_t f=0;f<imagedepth;f++) {
         double value;
         linestream >> value;
+        total += value;
         dirtyBeam.set(y,x,f,value);
       }
+      if (imagedepth>1) flatDirtyBeam.set(y,x,0,1);
     }
   }
   imagefile.close();
@@ -106,6 +127,8 @@ void setup(string mapfile, string psffile, string pbcorfile) {
   fluxscale = sqrt(sigmasq);
   cout << "Flux Scale = " << fluxscale << endl;
   //fluxscale = 1;
+
+  freqscale = 1./(double)imagedepth;
 }
 
 extern "C" {
@@ -150,7 +173,14 @@ int UserMonitor(CommonStr *Common, ObjectStr *Members) {
   UserCommonStr *UC = (UserCommonStr *)Common->UserCommon;
 
   if (Common->cool > 1.) Common->cool = 1.;
-  if (Common->cool < 1.) return 0;
+  if (Common->cool < 1.) {
+    UC->burnin += 1;
+    if (Common->cool>UC->cool) {
+      cout << Common->cool << " " << UC->burnin << endl;
+      UC->cool += 0.1;
+    }
+    return 0;
+  }
 
   UC->natoms.push_back(Members[0].Natoms);
   if (UC->nmodels == 0) {
@@ -203,7 +233,12 @@ int main(int argc, char **argv) {
   noise = dirtyMap.noise();
   median = dirtyMap.median();
 
-  Common.Ndim = 3;
+  if (imagedepth>1) {
+    Common.Ndim = 5;
+  } else {
+    Common.Ndim = 3;
+  }
+
   Common.MinAtoms = 1;
   Common.MaxAtoms = 0;
   Common.Alpha = 1;
@@ -215,6 +250,8 @@ int main(int argc, char **argv) {
   Common.UserCommon = (void *)UserCommon;
   UserCommon->nmodels = 0;
   UserCommon->maxmodels = 300;
+  UserCommon->burnin = 0;
+  UserCommon->cool = 0;
 
   Members = new ObjectStr[Common.ENSEMBLE];
 

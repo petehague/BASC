@@ -3,6 +3,7 @@
 #include <cinttypes>
 #include <fstream>
 #include <sstream>
+#include <chrono>
 
 #include "../include/skimage.hpp"
 #include "../bayesys/bayesys3.h"

@@ -15,6 +15,9 @@ nmodels = 0
 mapsize = 0
 mapdepth = 0
 
+# Results
+atoms = 0
+
 
 def run(dmap, dbeam, dflux):
     global chain, nmodels, mapsize, mapdepth
@@ -50,33 +53,13 @@ def run(dmap, dbeam, dflux):
                                             mapsize,
                                             mapdepth))
     chain = Table.read("chain.txt", format="ascii")
-    nmodels = open("info.txt", "r")
+    infofile = open("info.txt", "r")
+    nmodels = infofile.readline()
+    infofile.close()
 
 
-if __name__ == "__main__":
-    if len(sys.argv) < 4:
-        print("basc.py <dirty map> <dirty psf> <dirty primary beam>")
-        sys.exit(1)
-
-    run(sys.argv[1], sys.argv[2], sys.argv[3])
-
-    afactor = 1.0/float(nmodels.readline())
-
-    insize = int(mapsize/2)
-    inset = mapsize/4
-
-    atoms = np.zeros(shape=(mapsize, mapsize), dtype=float)
-    for line in chain:
-        x = int(round(line[0]) + inset)
-        y = int(round(line[1]) + inset)
-        f = line[2]
-        atoms[y, x] += f
-
-    atoms = np.multiply(atoms, afactor)
-    atomFT = np.fft.fftshift(fft2(atoms))
-
-    dirtyMap = fits.open(sys.argv[1])
-    dirtyBeam = fits.open(sys.argv[2])
+def beamft(filename):
+    dirtyBeam = fits.open(filename)
 
     beam = np.zeros(shape=(mapsize, mapsize), dtype=float)
     offset = mapsize/2
@@ -88,26 +71,81 @@ if __name__ == "__main__":
             if (u > 0 and u < mapsize and v > 0 and v < mapsize):
                 beam[y, x] = dirtyBeam[0].data[0, 0, v, u]/beamfactor
 
-    beamFT = np.fft.fftshift(fft2(beam))
-    result = np.absolute(ifft2(np.fft.ifftshift(np.multiply(atomFT, beamFT))))
+    return np.fft.fftshift(fft2(beam))
 
-    plt.imsave("zbeam.png", beam)
-    plt.imsave("atomft.png", np.absolute(atomFT))
-    plt.imsave("beamft.png", np.absolute(beamFT))
-    plt.imsave("totalft.png", np.absolute(atomFT*beamFT))
 
-    plt.imsave("resid.png", result)
-    plt.imsave("atoms.png", atoms)
-    plt.imsave("atoms2.png", np.absolute(ifft2(np.fft.ifftshift(atomFT))))
+def getAtoms():
+    global atoms
 
+    atoms = np.zeros(shape=(mapsize/2, mapsize/2), dtype=float)
+
+    afactor = 1.0/float(nmodels)
+
+    for line in chain:
+        x = int(round(line[0]))
+        y = int(round(line[1]))
+        f = line[2]
+        atoms[y, x] += f
+
+    atoms = np.multiply(atoms, afactor)
+    return atoms
+
+
+def getAtomsPad():
+    global atoms
+
+    atoms = np.zeros(shape=(mapsize, mapsize), dtype=float)
+
+    afactor = 1.0/float(nmodels)
+    inset = mapsize/4
+
+    for line in chain:
+        x = int(round(line[0]) + inset)
+        y = int(round(line[1]) + inset)
+        f = line[2]
+        atoms[y, x] += f
+
+    atoms = np.multiply(atoms, afactor)
+    return atoms
+
+
+def atomft():
+    return np.fft.fftshift(fft2(getAtomsPad()))
+
+
+def resid(filename, beamfile):
+    insize = int(mapsize/2)
+    inset = int(mapsize/4)
+
+    result = ifft2(np.fft.ifftshift(np.multiply(atomft(), beamft(beamfile))))
+    result = np.absolute(result)
     clresult = np.zeros(shape=(insize, insize), dtype=float)
     for x in range(0, insize):
         for y in range(0, insize):
             clresult[y, x] = result[int(y+inset), int(x+inset)]
 
     sqsum = 0.0
+    dirtyMap = fits.open(filename)
     dmap = dirtyMap[0].data[0, 0]
     for y in range(insize):
         for x in range(insize):
             sqsum = sqsum + (dmap[y, x]-clresult[y, x])**2
-    print("RMS residual: {}".format(np.sqrt(sqsum/(insize*insize))))
+    return np.sqrt(sqsum/float(insize/insize))
+
+
+if __name__ == "__main__":
+    if len(sys.argv) < 4:
+        print("basc.py <dirty map> <dirty psf> <dirty primary beam>")
+        sys.exit(1)
+
+    run(sys.argv[1], sys.argv[2], sys.argv[3])
+
+    atomFT = atomft()
+    beamFT = beamft(sys.argv[2])
+
+    plt.imsave("atomft.png", np.absolute(atomFT))
+    plt.imsave("beamft.png", np.absolute(beamFT))
+    plt.imsave("totalft.png", np.absolute(atomFT*beamFT))
+    plt.imsave("atoms.png", atoms)
+
+    print("RMS residual: {}".format(resid(sys.argv[1], sys.argv[2])))

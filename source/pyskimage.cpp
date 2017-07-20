@@ -36,8 +36,8 @@ void parsefrompy(skimage *target, PyObject* source, uint32_t x, uint32_t y) {
     return;
   }
 
-  for (auto v=0;v<y;v++) {
-    for (auto u=0;u<x;u++) {
+  for (uint32_t v=0;v<y;v++) {
+    for (uint32_t u=0;u<x;u++) {
       counter = u+v*x;
       datum = PyList_GetItem(source, counter);
       PyArg_Parse(datum, "d", &value);

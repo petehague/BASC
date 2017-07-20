@@ -81,7 +81,7 @@ static PyObject* skimage_deconvolve(PyObject *self, PyObject *args) {
   if (!PyArg_ParseTuple(args,"O!", &PyList_Type, &points)) { return NULL; }
 
   psize = PyList_Size(points);
-  for (auto i=0;i<psize;i++) {
+  for (uint32_t i=0;i<psize;i++) {
     datum = PyList_GetItem(points,i);
     atoms.push_back(getvec(datum));
     flux.push_back(getflux(datum));

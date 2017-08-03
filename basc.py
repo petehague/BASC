@@ -19,6 +19,7 @@ mapdepth = 0
 atoms = 0
 
 
+# Perform MCMC run
 def run(dmap, dbeam, dflux):
     global chain, nmodels, mapsize, mapdepth
 
@@ -58,6 +59,7 @@ def run(dmap, dbeam, dflux):
     infofile.close()
 
 
+# Retrieve fourier transform of beam
 def beamft(filename):
     dirtyBeam = fits.open(filename)
 
@@ -74,6 +76,7 @@ def beamft(filename):
     return np.fft.fftshift(fft2(beam))
 
 
+# Get a map of flux weighted atom positions
 def getAtoms():
     global atoms
 
@@ -91,6 +94,7 @@ def getAtoms():
     return atoms
 
 
+# Version of the above, but pads map to make it the same size as dirty map
 def getAtomsPad():
     global atoms
 
@@ -109,10 +113,12 @@ def getAtomsPad():
     return atoms
 
 
+# Gets the fourier transform of the atoms, padded to dirty map size
 def atomft():
     return np.fft.fftshift(fft2(getAtomsPad()))
 
 
+# Computes the RMS residual of the convolved atom map/beam with dirty map
 def resid(filename, beamfile):
     insize = int(mapsize/2)
     inset = int(mapsize/4)

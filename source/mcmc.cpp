@@ -7,12 +7,15 @@
 
 #include "../include/skimage.hpp"
 #include "../bayesys/bayesys3.h"
+#include "../include/options.hpp"
 
 skimage dirtyMap, dirtyBeam, primaryBeam;
 skimage flatDirtyMap, flatDirtyBeam, flatPrimaryBeam;
 double sigmasq, fluxscale, freqscale;
 
 uint32_t imagesize, imagedepth;
+
+optDict options;
 
 bool cubeSwitch = false;
 
@@ -240,17 +243,20 @@ int main(int argc, char **argv) {
     Common.Ndim = 3;
   }
 
-  Common.MinAtoms = 1;
-  Common.MaxAtoms = 0;
-  Common.Alpha = 1;
-  Common.Valency = 0;
-  Common.Iseed = 4321;
-  Common.ENSEMBLE = 10;
-  Common.Method = -1;
-  Common.Rate = 1;
+  options.readFile("config.txt");
+  //options.report();
+
+  Common.MinAtoms = options.getint("MinAtoms");
+  Common.MaxAtoms = options.getint("MaxAtoms");
+  Common.Alpha = options.getint("Alpha");
+  Common.Valency = options.getint("Valency");
+  Common.Iseed =  options.getint("Iseed");
+  Common.ENSEMBLE =  options.getint("Ensemble");
+  Common.Method =  options.getint("Method");
+  Common.Rate =  options.getint("Rate");
   Common.UserCommon = (void *)UserCommon;
   UserCommon->nmodels = 0;
-  UserCommon->maxmodels = 300;
+  UserCommon->maxmodels =  options.getint("maxmodels");
   UserCommon->burnin = 0;
   UserCommon->cool = 0;
 

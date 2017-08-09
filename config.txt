@@ -1,0 +1,9 @@
+MinAtoms = 1
+MaxAtoms = 0
+Alpha = 1
+Valency = 0
+Iseed = 4321
+Ensemble = 10
+Method = -1
+Rate = 1
+maxmodels = 300

@@ -263,7 +263,7 @@ int main(int argc, char **argv) {
   Members = new ObjectStr[Common.ENSEMBLE];
 
   startpoint = chrono::system_clock::now();
-  dirtyMap.setnoise(9e-5);
+
   code = BayeSys3(&Common,Members);
   elapsed = (double)(std::chrono::duration_cast<std::chrono::milliseconds>(chrono::system_clock::now()-startpoint).count() )/1000.0;
   cout << "Chain time: " << elapsed << "s" << endl;

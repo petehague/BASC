@@ -1,6 +1,6 @@
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 //             Bayesian Inference
-// 
+//
 // Filename:   bayesys3.c
 //
 // Purpose:    Obtain sample objects from posterior atomic distribution.
@@ -37,7 +37,7 @@
 //
 //  An OBJECT is a combination of a-priori-equivalent "atoms":
 //  statisticians call this construction a "mixture model".
-// 
+//
 //  ATOMS
 //  The number of atoms N in an object can range from MIN to MAX.
 //  MIN >= 1 is required to avoid the algorithmically special null object N=0.
@@ -62,7 +62,7 @@
 //  wraparound-continuous, so is more properly described as a "hyper-torus".
 //  BayeSys gives you coordinate vectors "double Cube[Ndim]" with values in
 //  (0,1), but you can transform these into other "Coord" if you wish.
-//  
+//
 //  The BayeShape procedure lets you modify some or all of your coordinates
 //  into nine alternative configurations:
 //
@@ -102,7 +102,7 @@
 //  The MassInf library incorporated in BayeSys provides Flux procedures for
 //  its priors and linear data.
 //
-//  DISPLAY 
+//  DISPLAY
 //  The coordinates and intensities are supplemented by a guidance width, being
 //      log(fraction of hypercube volume that atom might plausibly range over).
 //  This may help you to produce smooth displays from the atomic objects.
@@ -126,9 +126,9 @@
 //  Internally in the program, hypercube coordinates are mapped to an
 //  extended-integer label whose range fills the hypercube but which preserves
 //  a degree of locality: small changes in this integer will necessarily
-//  correspond to small changes in coordinates.  
+//  correspond to small changes in coordinates.
 //  The user can use the Method parameter to control the style of this mapping,
-//  and the operation of the various internal engines that control the 
+//  and the operation of the various internal engines that control the
 //  evolution of the ensemble.
 //
 //     Method = 0    is the simplest algorithm, mapping hypercube coordinates
@@ -152,7 +152,7 @@
 //                   This is ineffective if there is only one ensemble object.
 //
 // if( Method & 8 ), the algorithm includes the Chameleon2 engine, which lets
-//                   atoms from different ensemble objects exchange position. 
+//                   atoms from different ensemble objects exchange position.
 //                   This is ineffective if there is only one ensemble object.
 //
 // if( Method & 16), the algorithm will include the Leapfrog1 engine, which
@@ -187,7 +187,7 @@
 //
 //  Author generally recommends switching everything in by
 //                   Method = 127 (equivalently -1) .
-//  
+//
 //=============================================================================
 //
 // The "Massive Inference" (MassInf) option is provided for applications where
@@ -202,9 +202,9 @@
 // Common->MassInf defines the shape P(z) of the prior according to
 //
 // (0) "monkeys"              P(z) = delta(z-q),   i.e. z = q = constant
-//                     
+//
 // (1) "positive"             P(z) = exp(-z/q) / q    in z > 0
-//    
+//
 // (2) "positive/negative"    P(z) = exp(-|z|/q) / 2q
 //                                         2     2               2
 // (3) "Gaussian"             P(z) = exp(-z / 2 q ) / sqrt(2 pi q )
@@ -289,7 +289,7 @@
 //          v3.10      29 Nov 2003  Free software under GNU LGPL
 //          v3.11       3 Feb 2004  Control uses <#copies>.  Better Evid & Info
 //-----------------------------------------------------------------------------
-// 
+//
 #include <stdlib.h>
 #include <float.h>
 #include <math.h>
@@ -335,7 +335,7 @@ typedef struct
 //  CALL            catches negative error codes
 //  PLUS(x,y)       log(exp(x)+exp(y))
 //  SWAP(x,y)       exchange
-// 
+//
 #undef  CALLOC
 #define CALLOC(p,n,t) {p=NULL;\
 if((n)>0&&!(p=(t*)calloc((size_t)(n),sizeof(t))))\
@@ -539,10 +539,10 @@ static void   poiss2lhood   (double, double, double*, double*, double*,
 //  |                  Empty     Empty         Insert1   Insert2
 //  |                 Insert1   Insert1        Delete1    Try2
 //  |                  Try1                     Try1
-//  |      
+//  |
 //  |      Empty     Insert1     Try1     Delete1     Insert2     Try2
 //  |        |         | \_________|_\______|_\_________|_\_________|_\___
-//  |        |         |           |        |           |           |     | 
+//  |        |         |           |        |           |           |     |
 //<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 //  |        |         |           |        |           |           |     |
 //  |    UserEmpty UserInsert1 UserTry1 UserDelete1 UserInsert2 UserTry2  |
@@ -553,16 +553,16 @@ static void   poiss2lhood   (double, double, double*, double*, double*,
 
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Function:  BayeSys3
-// 
+//
 // Purpose:   Perform Markov chain Monte Carlo algorithm for
 //            Bayesian analysis or maximisation over unit hypercube,
 //            using an ensemble of one or more objects.
-// 
+//
 // History:   JS BayeSys1      3 Mar 1999 -  3 Nov 2000
 //               BayeSys2     25 Apr 2001 - 10 Sep 2001
 //               BayeSys3     12 Jan 2002 -  3 Feb 2004
 //-----------------------------------------------------------------------------
-// 
+//
 int BayeSys3(            //   O  +ve finish code from UserMonitor (or error)
 CommonStr* Common,       // I O  General information
 ObjectStr* Objects)      //   O  ENSEMBLE of objects
@@ -719,7 +719,7 @@ Exit:
 
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Function:  BayeShape
-// 
+//
 // Purpose:   Transfer BayeSys hypercube to User's shape.
 //
 //   Shape  Description           Prob(Coord[i])                    Range of i
@@ -742,7 +742,7 @@ Exit:
 //         No singularity, permutation given by ranked order of Cube[0...N-1].
 //
 //     1   Positive orthant
-//         No singularity.  
+//         No singularity.
 //         The origin remains unchanged.
 //         Other corners are at infinity.
 //
@@ -932,7 +932,7 @@ static const double  logpibytwo   =  0.45158270528945486473;
         hemisphere = 0;
         for( i = 0; i < N; i++ )
             hemisphere ^= (unsigned)(Cube[i] * Z);          // Hilbert parity
-        if( hemisphere & 1 ) 
+        if( hemisphere & 1 )
             Coord[N] = -Coord[N];
         break;
 
@@ -945,7 +945,7 @@ static const double  logpibytwo   =  0.45158270528945486473;
 
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Function:  ShapeSolve
-// 
+//
 // Purpose:   Latitude phi for which
 //                   ShapeCumul(phi) / ShapeCumul(PI/2) = outward
 //            Equator is    outward = 0, phi = 0
@@ -1049,7 +1049,7 @@ static const double  pibytwo = 1.57079632679489661923;
         mc = (mb - ma) / (yb - ya);
         c += 0.5 * mc * (b - c) * (c - a);   // quadratic correction
     }
-    if( c < a )  c = a;                      // final protection      
+    if( c < a )  c = a;                      // final protection
     if( c > b )  c = b;                      // final protection
     *cosp = cos(c);
     *sinp = sin(c);
@@ -1057,7 +1057,7 @@ static const double  pibytwo = 1.57079632679489661923;
 
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Function:  ShapeCumul
-// 
+//
 // Purpose:     phi       N-1
 //            INTEGRAL cos   (theta) d(theta)
 //               0
@@ -1099,7 +1099,7 @@ double* deriv)      //   O cos(phi)^(N-1)
 
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Function:  ShapeIndex
-// 
+//
 // Purpose:   Index vector y into increasing order
 //            y[p[0]] <= y[p[1]] <= .... <= y[p[n-1]]
 //
@@ -1162,12 +1162,12 @@ double*   p)    //   O  index (integer values)
 
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Function:  BayesAlloc
-// 
+//
 // Purpose:   Allocate memory for BayeSys (and MassInf)
-// 
+//
 // History:   JS        16 Oct 2002, 1 Feb 2003, 13 Sep 2003
 //-----------------------------------------------------------------------------
-static 
+static
 int BayesAlloc(      //   O  0, or -ve error
 CommonStr* Common,   // I(O) general information
 ObjectStr* Objects,  //  (O) new ENSEMBLE of objects            [ENSEMBLE]
@@ -1225,12 +1225,12 @@ Exit:
 
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Function:  BayesInit
-// 
+//
 // Purpose:   Initialise BayeSys (and MassInf)
-// 
+//
 // History:   JS        16 Oct 2002, 1 Feb 2003
 //-----------------------------------------------------------------------------
-static 
+static
 int BayesInit(       //   O  0, or -ve error
 CommonStr* Common,   // I O  general information
 ObjectStr* Objects)  //   O  new ENSEMBLE of objects
@@ -1278,9 +1278,9 @@ Exit:
 
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Function:  PriorInit
-// 
+//
 // Purpose:   Initialise prior objects and extra loglikelihood values
-// 
+//
 // History:   JS        16 Oct 2002, 1 Feb 2003
 //-----------------------------------------------------------------------------
 static
@@ -1340,7 +1340,7 @@ Exit:
 // Purpose:   Rate-limited allowable cooling.
 //            Aim for about Rate copy operations per object
 //            (see Anneal for documentation on this).
-//            
+//
 //            Guard against accidental near-coalescence of likelihood values
 //            (which would allow arbitrarily large cooling), by including
 //            artificial extra loglikelihood values, perhaps from old ensembles
@@ -1351,7 +1351,7 @@ Exit:
 //                            20 Aug 2003  Separate Sort2 call
 //                             3 Feb 2004  Use <# copies> not #copies(Lmax)
 //-----------------------------------------------------------------------------
-static 
+static
 int Control(        //   O  0, or -ve error
 CommonStr* Common,  // I    General information
 ObjectStr* Objects, // I    Sample objects, with Lhood               [ENSEMBLE]
@@ -1437,7 +1437,7 @@ double*    dcool)   //   O  cooling increment allowed by Rate
             {
                 a = b;    copya = copyb;
                 swap = wa;    wa = wb;    wb = swap;
-                b = 2.0 * a;    
+                b = 2.0 * a;
                 for( i = 0; i < N; i++ )
                     wb[i] = wa[i] * wa[i];
                 copyb = Copies(wb, N);
@@ -1510,7 +1510,7 @@ Exit:
 
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Function:  Copies
-// 
+//
 // Purpose:   <# copy operations per object> for weights w
 //
 //              = SUM | w - <w> |  /  2 SUM w
@@ -1658,7 +1658,7 @@ Exit:
 
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Function:  Sort2
-// 
+//
 // Purpose:   Sort on value into increasing order
 //
 // History:   JS    20 Aug 2003     From Qsort of 29 Aug 1991
@@ -1710,7 +1710,7 @@ int      N)         // I    dimension
 
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Function:  FillOcean
-// 
+//
 // Purpose:   Width of atom = occupiable fraction of hypercube (as logarithm).
 //
 // Method:    Fill Ocean of previous atoms ('o' in diagram) along Hilbert line.
@@ -1731,10 +1731,10 @@ int      N)         // I    dimension
 // Notes: (1) Uses one standard Hilbert line so boundaries might become visible
 //        (2) This procedure is for display, it's not solid Bayesian analysis.
 //        (3) Not parallelisable.
-// 
+//
 // History:   JS        25 Jan 2003, 20 Oct 2003
 //-----------------------------------------------------------------------------
-static 
+static
 int FillOcean(       //   O  0, or -ve error
 CommonStr* Common,   // I O  general information
 ObjectStr* Objects,  // I    ENSEMBLE of objects                [ENSEMBLE]
@@ -1832,9 +1832,9 @@ Exit:
 
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Function:  MCMCengines
-// 
+//
 // Purpose:   Apply MCMC engines for standard timestep
-// 
+//
 // History:   JS         2 Jan 2002 - 14 Jan 2003
 //-----------------------------------------------------------------------------
 static
@@ -2033,12 +2033,12 @@ Exit:
 
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Function:  BayesFree
-// 
+//
 // Purpose:   Free allocated memory for BayeSys (and MassInf)
-// 
+//
 // History:   JS        16 Oct 2002, 16 Nov 2002, 1 Feb 2003
 //-----------------------------------------------------------------------------
-static 
+static
 void BayesFree (
 CommonStr* Common,   // I(O) general information
 ObjectStr* Objects,  //  (O) old objects
@@ -2080,13 +2080,13 @@ Node*      Ocean)    //  (O) old ocean
 //
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Function:  DoOperations
-// 
+//
 // Purpose:   Perform list of operations with parallelisable engine calls
-// 
+//
 // History:   JS        25 Oct 2002
 //-----------------------------------------------------------------------------
 #if ! PARALLEL
-static 
+static
 int DoOperations(        //   O  0, or -ve error
 OperStr*   Operations,   // I O  all operations
 CommonStr* Common,       // I O  general information
@@ -2109,12 +2109,12 @@ Exit:
 
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Function:  Do1operation
-// 
+//
 // Purpose:   Distribution procedure for parallelisable engine calls
-// 
+//
 // History:   JS        25 Oct 2002, 1 Feb 2003
 //-----------------------------------------------------------------------------
-static 
+static
 int Do1operation(        //   O  0, or -ve error
 OperStr*   Operations,   // I O  all operations
 CommonStr* Common,       // I O  general information
@@ -2145,7 +2145,7 @@ Exit:
 
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Function:  SetPrior                                       Parallel engine #0
-// 
+//
 // Purpose:   Sample the prior to set an Object of ENSEMBLE.
 //            The prior on the number of atoms is as follows.
 //
@@ -2188,11 +2188,11 @@ Exit:
 //
 //                    <N> = MIN + alpha  ,      var(N) = alpha (alpha + 1)
 //
-// 
+//
 // History:   JS         24 Jan 2002, 30 Sep 2002, 16 Oct 2002, 14 Jan 2003
 //                        1 Feb 2003, 8 Feb 2002
 //-----------------------------------------------------------------------------
-static 
+static
 int SetPrior(          //   O  0, or -ve error
 OperStr*   Oper,       // I O  operation
 CommonStr* Common,     // I    general information
@@ -2263,15 +2263,15 @@ Exit:
 
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Function:  CopyObject                                     Parallel engine #1
-// 
+//
 // Purpose:   Copy source ensemble object to destination, "*dest = *src".
 //            Ideally, destination object should be rebuilt afterwards to
 //            recover any nuisance parameters.
-// 
+//
 // History:   JS          25 Apr 2001, 2 Jan 2002, 21 Mar 2002, 30 Sep 2002,
 //                         1 Feb 2003, 8 Feb 2003, 20 Aug 2003
 //-----------------------------------------------------------------------------
-static 
+static
 int CopyObject(        //   O  0, or -ve error
 OperStr*   Oper,       // I O  operation
 CommonStr* Common,     // I(O) General information
@@ -2305,12 +2305,12 @@ Exit:
 
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Function:  MCMCsetup                                      Parallel engine #2
-// 
+//
 // Purpose:   Re-generate Links in new topology
-// 
+//
 // History:   JS        16 Oct 2002, 8 Feb 2003, 20 Aug 2003
 //-----------------------------------------------------------------------------
-static 
+static
 int MCMCsetup(         //   O  0, or -ve error
 OperStr*   Oper,       // I O  operation
 CommonStr* Common,     // I    general information
@@ -2324,7 +2324,7 @@ Node*      Links)      //   O  new trees
     int        Natoms   = Object->Natoms;
     int        j;
     int        CALLvalue = 0;
-   
+
     Object->Natoms = 0;
     CALL( Empty(Common, Object) )
     Object->reset = 0;                            // keep MassInf fluxes
@@ -2343,16 +2343,16 @@ Exit:
 
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Function:  LifeStory1                                     Parallel engine #3
-// 
+//
 // Purpose:   MCMC engine, cutdown alternate to 2-atom version LifeStory2.
 //
 //            Birth/Move/Death for one atom in an object.  Explores all space.
 //            Success defined as birth or death if this is allowed,
 //            else as movement.
-// 
+//
 // History:   JS         2 Jan 2002 - 8 Feb 2003
 //-----------------------------------------------------------------------------
-static 
+static
 int LifeStory1(        //   O  0, or -ve error
 OperStr*   Oper,       // I O  operation
 CommonStr* Common,     // I(O) general information
@@ -2360,7 +2360,7 @@ ObjectStr* Objects,    // I O  ENSEMBLE of objects
 Node*      Links)      // I O  linked lists of labels
 {
 // Sampling interval: each atom is investigated about TIMESTEP times
-static const double   TIMESTEP = 2.0000;     
+static const double   TIMESTEP = 2.0000;
     int        Ndim     = Common->Ndim;
     double     cool     = Common->cool;
     int        Nbits    = Common->Nbits;
@@ -2466,10 +2466,10 @@ Exit:
 //            Birth/Move/Death for two adjacent atoms.  Explores all space.
 //            Success defined as birth or death if this is allowed,
 //            else as movement.
-// 
+//
 // History:   JS         2 Jan 2002 - 8 Feb 2003
 //-----------------------------------------------------------------------------
-static 
+static
 int LifeStory2(        //   O  0, or -ve error
 OperStr*   Oper,       // I O  operation
 CommonStr* Common,     // I(O) general information
@@ -2605,23 +2605,23 @@ Exit:
 
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Function:  Chameleon1                                     Parallel engine #5
-// 
+//
 // Purpose:   MCMC engine.
 //
 //            Tries to move atoms from one object to another,
 //            WITHOUT geometrical exploration.  Success defined as acceptance.
-// 
+//
 //                 ========X===============X==================X=========
 //                                         |
 //                                         |
-//                                        \|/ 
+//                                        \|/
 //                 ====X==============X====:=====X========X=============
 //
 // Note:      ENSEMBLE should be at least 2, obviously.
-// 
+//
 // History:   JS         31 Jan 2002 - 8 Feb 2003
 //-----------------------------------------------------------------------------
-static 
+static
 int Chameleon1(        //   O  0 = op, or -ve error
 OperStr*   Oper,       // I O  operation
 CommonStr* Common,     // I(O) general information
@@ -2702,7 +2702,7 @@ Exit:
 
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Function:  Chameleon2                                     Parallel engine #6
-// 
+//
 // Purpose:   MCMC engine.
 //
 // Method:    Tries to exchange positions of nearby atoms in different objects,
@@ -2714,16 +2714,16 @@ Exit:
 //                            |                   |
 //                         Exchange              \|/
 //                 ===========X===========X=======:=======
-// 
+//
 //            For reasonable success rate, the exchanging atom is taken to be
 //            the left or right neighbour of the original atom, and hence
 //            "close".
 //
 // Note:      ENSEMBLE should be at least 2, obviously.
-// 
+//
 // History:   JS         31 Jan 2002 - 8 Feb 2003
 //-----------------------------------------------------------------------------
-static 
+static
 int Chameleon2(        //   O  0 = op, or -ve error
 OperStr*   Oper,       // I O  operation
 CommonStr* Common,     // I(O) general information
@@ -2731,7 +2731,7 @@ ObjectStr* Objects,    // I O  ENSEMBLE of objects
 Node *     Links)      // I O  linked lists of labels
 {
 // Sampling interval: each pair is investigated about TIMESTEP times
-static const double   TIMESTEP = 0.5000;  
+static const double   TIMESTEP = 0.5000;
     double     cool     = Common->cool;
     ObjectStr* iObject  = &Objects[Oper->i];
     ObjectStr* jObject  = &Objects[Oper->j];
@@ -2813,7 +2813,7 @@ Exit:
 
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Function:  Leapfrog1                                      Parallel engine #7
-// 
+//
 // Purpose:   Geometrical MCMC engine.
 //
 // Method:    Tries to move points by inverting w.r.t. a catalyst atom,
@@ -2834,10 +2834,10 @@ Exit:
 //
 // Note:      ENSEMBLE should be at least 3, otherwise
 //            Leapfrog1 will not of itself expand the bubble of atoms.
-// 
+//
 // History:   JS         2 Jan 2002 - 8 Feb 2003
 //-----------------------------------------------------------------------------
-static 
+static
 int Leapfrog1(         //   O  0, or -ve error
 OperStr*   Oper,       // I O  operation
 CommonStr* Common,     // I(O) general information
@@ -2845,7 +2845,7 @@ ObjectStr* Objects,    // I O  ENSEMBLE of objects
 Node*      Links)      // I O  linked lists of labels
 {
 // Sampling interval: each atom is investigated about TIMESTEP times
-static const double   TIMESTEP = 1.0000;  
+static const double   TIMESTEP = 1.0000;
     int        Ndim     = Common->Ndim;
     double     cool     = Common->cool;
     ObjectStr* iObject  = &Objects[Oper->i];
@@ -2952,7 +2952,7 @@ Exit:
 
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Function:  Leapfrog2                                      Parallel engine #8
-// 
+//
 // Purpose:   Geometrical MCMC engine.
 //
 // Method:    Tries to move points by reflecting between catalyst atoms,
@@ -2976,10 +2976,10 @@ Exit:
 //
 // Note:      ENSEMBLE should be at least 4, otherwise
 //            Leapfrog2 will not of itself expand the bubble of atoms.
-// 
+//
 // History:   JS         2 Jan 2002 - 8 Feb 2003
 //-----------------------------------------------------------------------------
-static 
+static
 int Leapfrog2(         //   O  0, or -ve error
 OperStr*   Oper,       // I O  operation
 CommonStr* Common,     // I(O) general information
@@ -2987,7 +2987,7 @@ ObjectStr* Objects,    // I O  ENSEMBLE of objects
 Node*      Links)      // I O  linked lists of labels
 {
 // Sampling interval: each atom is investigated about TIMESTEP times
-static const double   TIMESTEP = 1.0000;  
+static const double   TIMESTEP = 1.0000;
     int        Ndim     = Common->Ndim;
     double     cool     = Common->cool;
     ObjectStr* iObject  = &Objects[Oper->i];
@@ -3086,7 +3086,7 @@ Exit:
 
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Function:  GuidedWalk                                     Parallel engine #9
-// 
+//
 // Purpose:   Geometrical MCMC engine.
 //
 // Method:    Tries to offset atoms along a line parallel to the displacement
@@ -3107,7 +3107,7 @@ Exit:
 //                        |________________________|
 //            Points "o" of line have same Hilbert neighbours L and R as have X
 //            so these destinations are in detailed balance with X.
-//                   
+//
 //            It is likely (but not guaranteed) that a starting set of atom
 //            positions is capable of exploring the full space, but the number
 //            of atoms is constant, so not explored.
@@ -3124,10 +3124,10 @@ Exit:
 //            engine can fill out "unmeasured" directions exponentially fast.
 //
 // Note:      ENSEMBLE should be at least 2 and Ndim should also be at least 2.
-// 
+//
 // History:   JS         14 Jan 2003, 8 Feb 2002, 19 Jul 2003
 //-----------------------------------------------------------------------------
-static 
+static
 int GuidedWalk(        //   O  0, or -ve error
 OperStr*   Oper,       // I O  operation
 CommonStr* Common,     // I(O) general information
@@ -3135,7 +3135,7 @@ ObjectStr* Objects,    // I O  ENSEMBLE of objects
 Node*      Links)      // I O  linked lists of labels
 {
 // Sampling interval: each atom is investigated about TIMESTEP times
-static const double   TIMESTEP = 1.0000;  
+static const double   TIMESTEP = 1.0000;
 static const double   Z        = (unsigned)(-1) + 1.0;         // 2^32
     int        Ndim     = Common->Ndim;
     double     cool     = Common->cool;
@@ -3269,12 +3269,12 @@ Exit:
 
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Function:  MCMCexit                                      Parallel engine #10
-// 
+//
 // Purpose:   Empty Links
-// 
+//
 // History:   JS        16 Oct 2002, 1 Feb 2003
 //-----------------------------------------------------------------------------
-static 
+static
 int MCMCexit(          //   O  0, or -ve error
 OperStr*   Oper,       // I O  operation
 CommonStr* Common,     // I    general information
@@ -3310,12 +3310,12 @@ Exit:
 //
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Function:  Birth
-// 
+//
 // Purpose:   d(birth) / dtime
-// 
+//
 // History:   JS         30 Sep 2002
 //-----------------------------------------------------------------------------
-static 
+static
 double Birth(          //   O  birth rate
 CommonStr* Common,     // I    general information
 int        Natoms)     // I    # atoms
@@ -3346,12 +3346,12 @@ int        Natoms)     // I    # atoms
 
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Function:  Death
-// 
+//
 // Purpose:   d(death) / dtime
-// 
+//
 // History:   JS         30 Sep 2002
 //-----------------------------------------------------------------------------
-static 
+static
 double Death(          //   O  death rate
 CommonStr* Common,     // I    general information
 int        Natoms)     // I    # atoms
@@ -3367,12 +3367,12 @@ int        Natoms)     // I    # atoms
 
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Function:  SafeCube
-// 
+//
 // Purpose:   Ensure sufficient memory to add another atom into Object->Cubes
-// 
+//
 // History:   JS         2 Jan 2002
 //-----------------------------------------------------------------------------
-static 
+static
 int SafeCube(         //   O  0, or -ve allocation error
 CommonStr* Common,    // I    info and workspace
 ObjectStr* Object)    // I O  sample object
@@ -3407,12 +3407,12 @@ Exit:
 //
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Function:  Empty
-// 
+//
 // Purpose:   Set empty object.
-// 
+//
 // History:   JS         8 Feb 2002, 11 Oct 2003
 //-----------------------------------------------------------------------------
-static 
+static
 int Empty(            //   O  0, or -ve error
 CommonStr* Common,    // I    general information
 ObjectStr* Object)    // I O  sample object
@@ -3432,13 +3432,13 @@ Exit:
 
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Function:  Try1
-// 
-// Purpose:   Try inserting one new atom from Object->Cubes[Object->Natoms], 
+//
+// Purpose:   Try inserting one new atom from Object->Cubes[Object->Natoms],
 //            with NO update.
-// 
+//
 // History:   JS         8 Feb 2002
 //-----------------------------------------------------------------------------
-static 
+static
 int Try1(             //   O  +ve = OK, 0 = DO NOT USE, -ve = error
 double*    Ltry,      //   O  loglikelihood after adding trial atom
 CommonStr* Common,    // I    general information
@@ -3458,13 +3458,13 @@ Exit:
 
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Function:  Try2
-// 
+//
 // Purpose:   Try inserting two new atoms from Object->Cubes[Object->Natoms]
 //            and Object->Cubes[Object->Natoms + 1],  with NO update.
-// 
+//
 // History:   JS         8 Feb 2002
 //-----------------------------------------------------------------------------
-static 
+static
 int Try2(             //   O  +ve = OK, 0 = DO NOT USE, -ve = error
 double*    Ltry1,     //   O  loglikelihood after adding first trial atom
 double*    Ltry2,     //   O  loglikelihood after adding both trial atoms
@@ -3488,13 +3488,13 @@ Exit:
 
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Function:  Insert1
-// 
-// Purpose:   Insert one new atom from Object->Cubes[Object->Natoms], 
+//
+// Purpose:   Insert one new atom from Object->Cubes[Object->Natoms],
 //            with full update.
-// 
+//
 // History:   JS         2 Jan 2002, 8 Feb 2002
 //-----------------------------------------------------------------------------
-static 
+static
 int Insert1(          //   O  0, or -ve error
 CommonStr* Common,    // I(O) general information
 ObjectStr* Object,    // I O  sample object
@@ -3523,13 +3523,13 @@ Exit:
 
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Function:  Insert2
-// 
+//
 // Purpose:   Insert two new atoms from Object->Cubes[Object->Natoms] and
 //            Object->Cubes[Object->Natoms + 1], with full update.
-// 
+//
 // History:   JS         2 Jan 2002, 8 Feb 2002
 //-----------------------------------------------------------------------------
-static 
+static
 int Insert2(          //   O  0, or -ve error
 CommonStr* Common,    // I(O) general information
 ObjectStr* Object,    // I O  sample object
@@ -3565,13 +3565,13 @@ Exit:
 
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Function:  Delete1
-// 
+//
 // Purpose:   Delete one old atom from Object->Cubes[del], with full update,
 //            and optional return of loglikelihoods after 1 or 2 re-insertions.
-// 
+//
 // History:   JS         2 Jan 2002, 8 Feb 2003
 //-----------------------------------------------------------------------------
-static 
+static
 int Delete1(          //   O  0, or -ve error
 int        del,       // I    serial # for deletion
 double*    L1,        //  (O) loglikelihood after deletion then 1 insertion
@@ -3631,7 +3631,7 @@ Exit:
 //
 // History:   JS          2 Jan 2002, 16 Oct 2002
 //-----------------------------------------------------------------------------
-static 
+static
 void Topology(
 CommonStr* Common)    // I O  workspace
 {
@@ -3654,7 +3654,7 @@ CommonStr* Common)    // I O  workspace
 //
 // History:   JS          25 April 2001, 2 Jan 2002, 16 Oct 2002
 //-----------------------------------------------------------------------------
-static 
+static
 void CubetoLabel(
 unsigned*  Label,     //   O  extended-integer label               [Ndim]
 ObjectStr* Object,    // I    object containing input cube
@@ -3689,7 +3689,7 @@ static const double Z = (unsigned)(-1) + 1.0;          // 2^32
 //
 // History:   JS          25 April 2001, 2 Jan 2002, 6 Jan 2002, 16 Oct 2002
 //-----------------------------------------------------------------------------
-static 
+static
 void LabeltoCube(
 ObjectStr* Object,    //   O  object containing output cube
 unsigned*  Label,     // I    extended-integer label               [Ndim]
@@ -3727,7 +3727,7 @@ static const double Z = (unsigned)(-1) + 1.0;          // 2^32
 //
 // History:   JS          25 Apr 2001
 //-----------------------------------------------------------------------------
-static 
+static
 void RanLabel(
 unsigned*  r,      //   O  value                  [Ndim]
 int        Ndim,   // I    dimension
@@ -3745,12 +3745,12 @@ unsigned*  Rand)   // I O  random generator state
 //
 // History:   JS          28 Jan 2002
 //-----------------------------------------------------------------------------
-static 
+static
 void CopyLabel(
 unsigned*  w,      //   O  w = u                   [Ndim]
 unsigned*  u,      // I    can be overwritten      [Ndim]
 int        Ndim)   // I    dimension
-{ 
+{
     int  i;
     for( i = 0; i < Ndim; i++ )
     {
@@ -3766,7 +3766,7 @@ int        Ndim)   // I    dimension
 //
 // History:   JS          2 Jan, 12 Jan 2002
 //-----------------------------------------------------------------------------
-static 
+static
 void NewLabel(
 unsigned*  New,    //   O  new label              [Ndim]
 unsigned*  Old,    // I    old label              [Ndim]
@@ -3775,7 +3775,7 @@ int        Ndim,   // I    dimension
 int        rbits,  // I    # low-order bits to be randomised
 int        Nbits,  // I    # bits per word          (nbits = Ndim * Nbits)
 unsigned*  Rand)   // I O  random generator state
-{ 
+{
     int  shift;
     int  i;
 
@@ -3804,7 +3804,7 @@ unsigned*  Rand)   // I O  random generator state
 //
 // History:   JS          2 Jan 2002
 //-----------------------------------------------------------------------------
-static 
+static
 int Outside(       //   O  0 = strictly inside, 1 = outside or on edge
 unsigned*  Where,  // I    where is this point?     [Ndim]
 unsigned*  Left,   // I    left edge                [Ndim]
@@ -3836,8 +3836,8 @@ int        Ndim)   // I    dimension
 //          |   BayeSys3   |
 //          |______________|
 //                 |      |
-//                 |      | 
-//                 |      |_______________________________________________ 
+//                 |      |
+//                 |      |_______________________________________________
 //                 |     |                      MassInf                   |
 //                 |     | FluxEmpty               |                      |
 //                 |     | FluxTry1   ,FluxTry2    | FluxAlloc, FluxInit  |
@@ -3860,12 +3860,12 @@ int        Ndim)   // I    dimension
 //
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Function:  FluxAlloc
-// 
+//
 // Purpose:   Allocate memory for MassInf
-// 
+//
 // History:   JS       10 Feb 2003, 15 Aug 2003
 //-----------------------------------------------------------------------------
-static 
+static
 int FluxAlloc(           //   O  0, or -ve error
 CommonStr* Common,       // I    general info
 ObjectStr* Objects)      // I O  allocate memory
@@ -3931,12 +3931,12 @@ Exit:
 
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Function:  FluxInit
-// 
+//
 // Purpose:   Initialise system for MassInf
-// 
+//
 // History:   JS       10 Feb 2003
 //-----------------------------------------------------------------------------
-static 
+static
 int FluxInit(            //   O  0, or -ve error
 CommonStr* Common,       // I    general info
 ObjectStr* Objects)      // I O  initialise object info
@@ -3956,14 +3956,14 @@ ObjectStr* Objects)      // I O  initialise object info
 
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Function:  FluxCalib0
-// 
+//
 // Purpose:   Set internal hyperparameters
 //            FluxUnit0 in Common and FluxUnit in Objects.
-// 
+//
 // History:    JS        1 Feb 2003, 11 Jul 2003, 12 Aug 2003, 20 Aug 2003
 //                      12 Sep 2003
 //-----------------------------------------------------------------------------
-static 
+static
 int FluxCalib0(          //   O  0, or -ve error
 CommonStr* Common,       // I O  set hyperparameters
 ObjectStr* Objects,      //   O  set hyperparameters
@@ -3977,7 +3977,7 @@ Node*      Links)        //  (O) empty on exit
     double*    Mock     = Objects->Mock;        //  (O) mock data       [Ndata]
     int*       Counts   = Common->Counts;       //  (O) (Poisson data)  [Ndata]
     int        N        = 12;     // adequate # samples
-    double     Datanorm = 0.0;    // ||data|| 
+    double     Datanorm = 0.0;    // ||data||
     double     Mocknorm = 0.0;    // ||mockdata||
     OperStr    Operations[1];     // set prior
     int        i, k;              // counter
@@ -4051,7 +4051,7 @@ Exit:
 //
 // History:   JS  2 Jan 2002 - 20 Aug 2003
 //-----------------------------------------------------------------------------
-static 
+static
 void FluxCalib(
 CommonStr* Common,       // I    read hyperparameters
 ObjectStr* Object)       // I O  reset hyperparameters
@@ -4124,12 +4124,12 @@ ObjectStr* Object)       // I O  reset hyperparameters
 
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Function:  FluxFree
-// 
+//
 // Purpose:   Free memory for MassInf
-// 
+//
 // History:   JS       10 Feb 2003
 //-----------------------------------------------------------------------------
-static 
+static
 void FluxFree(
 CommonStr* Common,       // I    general info
 ObjectStr* Objects)      // I(O) free memory
@@ -4179,7 +4179,7 @@ ObjectStr* Objects)      // I(O) free memory
 //
 // History:   JS          21 Mar 2002, 3 Oct 2002, 18 Aug 2003
 //-----------------------------------------------------------------------------
-static 
+static
 void FluxEmpty(
 double*    Lhood,     //   O  loglikelihood
 CommonStr* Common,    // I O  general information
@@ -4212,7 +4212,7 @@ ObjectStr* Object)    // I(O) sample object
 //
 // History:   JS          21 Mar 2002, 3 Oct 2002, 12 Aug 2003, 18 Aug 2003
 //-----------------------------------------------------------------------------
-static 
+static
 int FluxTry1(         //   O  +ve = OK, 0 = DO NOT USE, -ve = error abort
 double*    dLtry,     //   O  d(logLikelihood) from inserting one atom
 CommonStr* Common,    // I    general information
@@ -4280,7 +4280,7 @@ Exit:
 //
 // History:   JS          21 Mar 2002, 3 Oct 2002, 12 Aug 2003, 18 Aug 2003
 //-----------------------------------------------------------------------------
-static 
+static
 int FluxTry2(         //   O  +ve = OK, 0 = DO NOT USE, -ve = error abort
 double*    dLtry1,    //   O  d(logLikelihood) from inserting first atom
 double*    dLtry2,    //   O  d(logLikelihood) from inserting both atoms
@@ -4354,7 +4354,7 @@ Exit:
 // Function:  FluxInsert1
 //
 // Purpose:   Insert 1 new atom with fluxes into Object, keeping it up-to-date,
-//            and set d(loglikelihood(fluxes)). 
+//            and set d(loglikelihood(fluxes)).
 //                                              cool
 //            Sample z from  Prior(z) L(...,x,z)
 //
@@ -4365,7 +4365,7 @@ Exit:
 //
 // History:   JS          21 Mar 2002, 3 Oct 2002, 12 Aug 2003, 18 Aug 2003
 //-----------------------------------------------------------------------------
-static 
+static
 int FluxInsert1(        //   O  0, or -ve return code
 double*    dL,          //   O  d(loglikelihood(fluxes))
 CommonStr* Common,      // I O  general information
@@ -4435,7 +4435,7 @@ Exit:
 // Function:  FluxInsert2
 //
 // Purpose:   Insert 2 new atoms with fluxes into Object, keeping it up-to-date
-//            and set d(loglikelihood(fluxes)). 
+//            and set d(loglikelihood(fluxes)).
 //                                                              cool
 //            Sample z1,z2 from  Prior(z1,z2) L(...,x1,z1,x2,z2)
 //
@@ -4447,7 +4447,7 @@ Exit:
 //
 // History:   JS          21 Mar 2002, 3 Oct 2002, 12 Aug 2003, 18 Aug 2003
 //-----------------------------------------------------------------------------
-static 
+static
 int FluxInsert2(        //   O  0, or -ve return code
 double*    dL,          //   O  d(loglikelihood(fluxes))
 CommonStr* Common,      // I O  general information
@@ -4535,8 +4535,8 @@ Exit:
 // Function:  FluxDelete1
 //
 // Purpose:   Delete 1 old atom with fluxes from Object, keeping it up-to-date,
-//            and set d(loglikelihood(fluxes)). 
-//  
+//            and set d(loglikelihood(fluxes)).
+//
 //            dL := d logL(...)
 //
 //            The old atom has been placed after the last location of
@@ -4544,7 +4544,7 @@ Exit:
 //
 // History:   JS          21 Mar 2002, 3 Oct 2002, 12 Aug 2003, 18 Aug 2003
 //-----------------------------------------------------------------------------
-static 
+static
 int FluxDelete1(        //   O  0, or -ve return code
 double*    dL,          //   O  d(loglikelihood(fluxes))
 CommonStr* Common,      // I    general information
@@ -4596,7 +4596,7 @@ Exit:
 //             MassInf application procedures for user Footprints
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Function:  AtomBits
-// 
+//
 // Purpose:   Wrapper for user's UserFoot, offering some protection against
 //            user writing unusable fragments:
 //                nbits[ Valency ]       elements obey nbits[.] >= 0
@@ -4606,7 +4606,7 @@ Exit:
 //
 // History:   JS          21 Mar 2002, 3 Oct 2002, 12 Aug 2003
 //-----------------------------------------------------------------------------
-static 
+static
 int AtomBits(         //   O  +ve = OK
                       //       0  = DO NOT USE this position
                       //      -ve = ERROR
@@ -4660,7 +4660,7 @@ Exit:
 
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Function:  Overlap1
-// 
+//
 // Purpose:   Ensure (before inserting) that atom valencies do not overlap.
 //
 //            Dot products of individual footprints must be diagonal, else
@@ -4678,7 +4678,7 @@ Exit:
 //
 // History:   JS           2 Jan 2002, 21 Mar 2002
 //-----------------------------------------------------------------------------
-static 
+static
 int Overlap1(      //   O  0, or -ve user error
 int*     nbits,    // I    # fragments             [Valency]
 int*     ibits,    // I    Fragment positions      [<=Ndata]
@@ -4713,7 +4713,7 @@ int      Valency)  // I    # fluxes per atom
 
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Function:  Overlap2
-// 
+//
 // Purpose:   Ensure (before inserting) that valencies of two atoms do not
 //            wrongly overlap.
 //
@@ -4742,11 +4742,11 @@ int      Valency)  // I    # fluxes per atom
 //                       --> Valency                 -->Valency
 //
 //            Cross-terms between the two atoms (at most 1 per row or column)
-//            are indexed by Xindex, as in this example with Valency = 4. 
+//            are indexed by Xindex, as in this example with Valency = 4.
 //
 // History:   JS           2 Jan 2002
 //-----------------------------------------------------------------------------
-static 
+static
 int Overlap2(      //   O  0, or -ve user error
 int*     nbits,    // I    # fragments             [Valency]
 int*     ibits,    // I    Fragment positions      [<=Ndata]
@@ -4846,12 +4846,12 @@ int      Valency)  // I    # fluxes per atom
 
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Function:  SetIndex
-// 
+//
 // Purpose:   Set Xindex cross-terms between valencies.
-// 
+//
 // History:   JS          18 Aug 2003 from SetGrad2
 //-----------------------------------------------------------------------------
-static 
+static
 void SetIndex(
 int      Valency, // I    # fluxes per atom
 int*     nbits,   // I    # fragments             [Valency]
@@ -4906,12 +4906,12 @@ int*     Xindex)  //   O  index to cross-terms    [Valency]
 
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Function:  InsBits
-// 
+//
 // Purpose:   Insert atom fluxes into mock data
-// 
+//
 // History:   JS           2 Jan 2002
 //-----------------------------------------------------------------------------
-static 
+static
 void InsBits(
 double*  Mock,     // I O  Mock data
 double*  Flux,     // I    fluxes                 [Valency]
@@ -4933,12 +4933,12 @@ int      Valency)  // I    # fluxes per atom
 
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Function:  DelBits
-// 
+//
 // Purpose:   Delete atom fluxes from mock data
-// 
+//
 // History:   JS           2 Jan 2002
 //-----------------------------------------------------------------------------
-static 
+static
 void DelBits(
 double*  Mock,     // I O  Mock data
 double*  Flux,     // I    fluxes                 [Valency]
@@ -4962,16 +4962,16 @@ int      Valency)  // I    # fluxes per atom
 //          MassInf application procedures for quadratic chisquared
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Function:  SetGrad1
-// 
+//
 // Purpose:   Set quadratic coeffs for increment of logLikelihood from 1 atom,
 //            allowing for multiple Valency.
 //
 //               d(Lhood)  =  - g1.Flux  -  Flux.A11.Flux / 2
-// 
+//
 // History:   JS           2 Jan 2002
 //                        14 Aug 2003 Rely on no overlay in received bits
 //-----------------------------------------------------------------------------
-static 
+static
 void SetGrad1(
 double*  Mock,    // I    Mock data                 [Ndata]
 double*  Data,    // I    Data                      [Ndata]
@@ -5008,17 +5008,17 @@ double*  A11)     //   O  grad grad chisquared    [Valency]
 
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Function:  SetGrad2
-// 
+//
 // Purpose:   Set quadratic coeffs for increment of logLikelihood from 2 atoms,
 //            allowing for multiple Valency.
 //
 //    d(Lhood) = - g1.Flux1 - g2.Flux2
 //               - (Flux1.A11.Flux1 + 2 Flux1.A12.Flux2 + Flux2.A22.Flux2) / 2
-// 
+//
 // History:   JS           2 Jan 2002
 //                        18 Aug 2003 Rely on no overlay in received bits
 //-----------------------------------------------------------------------------
-static 
+static
 void SetGrad2(
 double*  Mock,    // I    Mock data                 [Ndata]
 double*  Data,    // I    Data                      [Ndata]
@@ -5137,7 +5137,7 @@ static const double sqrt2pi = 2.50662827463100050240;
 //              (1/cool) log INTEGRAL dPrior (Lhood / L0)^cool
 //
 //            for entire atom with Gaussian likelihood
-//                               
+//
 // History:   JS   19 Jul 2003, 14 Aug 2003, 12 Sep 2003
 //-----------------------------------------------------------------------------
 static
@@ -5164,7 +5164,7 @@ double*  A11)          // I    grad grad chisquared    [Valency]
 //              (1/cool) log INTEGRAL dPrior (Lhood / L0)^cool
 //
 //            for two entire atoms with Gaussian likelihood
-//                               
+//
 // History:   JS   19 Jul 2003, 14 Aug 2003, 12 Sep 2003
 //-----------------------------------------------------------------------------
 static
@@ -5359,11 +5359,11 @@ double*  Flux2)     // I    fluxes of atom2         [Valency]
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Function:  Gauss1Marginal
 //                                               -cool(g*z + A*z*z/2)
-//               (1/cool) log INTEGRAL dz Pr(z) e  
-//                               
+//               (1/cool) log INTEGRAL dz Pr(z) e
+//
 // History:   JS   19 Jul 2003, 18 Aug 2003, 12 Sep 2003
 //-----------------------------------------------------------------------------
-static 
+static
 double Gauss1Marginal( //   O  value, calculated OK even if cool=0
 int      MassInf,      // I    MassInf prior (0,1,2,3)
 double   cool,         // I    Annealing coefficient
@@ -5390,13 +5390,13 @@ double   A)            // I    curvature
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Function:  Gauss2Marginal
 //                                                       -cool(g.x + x.A.x/2)
-//                (1/cool) log INTEGRAL dxdy Pr(x)Pr(y) e 
-//                                  
+//                (1/cool) log INTEGRAL dxdy Pr(x)Pr(y) e
+//
 //            where  g.x = g1*x + g2*y,  x.A.x = A11*x*x + 2*A12*x*y + A22*y*y
 //
 // History:   JS   19 Jul 2003, 18 Aug 2003, 12 Sep 2003
 //-----------------------------------------------------------------------------
-static 
+static
 double Gauss2Marginal( //   O  value, calculated OK even if cool=0
 int      MassInf,      // I    MassInf prior (0,1,2,3)
 double   cool,         // I    Annealing coefficient
@@ -5439,7 +5439,7 @@ double   A22)          // I    curvature
 //
 // History:   JS   19 Jul 2003, 18 Aug 2003, 12 Sep 2003
 //-----------------------------------------------------------------------------
-static 
+static
 double Gauss1Sample( //   O  flux z
 int      MassInf,    // I    MassInf prior (0,1,2,3)
 Rand_t   Rand,       // I O  random generator state
@@ -5470,7 +5470,7 @@ double   A)          // I    curvature
 //
 // History:   JS   19 Jul 2003, 18 Aug 2003, 12 Sep 2003
 //-----------------------------------------------------------------------------
-static 
+static
 void Gauss2Sample(
 int      MassInf,    // I    MassInf prior (0,1,2,3)
 Rand_t   Rand,       // I O  random generator state
@@ -5526,14 +5526,14 @@ double*  Flux2)      //   O  flux
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Function:  gauss1marginal
 //                                              -cool(g*z + A*z*z/2)
-//              (1/cool) log INTEGRAL dz Pr(z) e                     
+//              (1/cool) log INTEGRAL dz Pr(z) e
 //
 //            where z is non-zero flux
-//                               
+//
 // History:   JS    2 Jan 2002
 //                 19 Jul 2003   "switch" recoding
 //-----------------------------------------------------------------------------
-static 
+static
 double gauss1marginal( //   O  value, calculated OK even if cool=0
 int     MassInf,       // I    Prior (0=monkeys,1=pos,2=posneg,3=gauss)
 double  cool,          // I    Annealing coefficient
@@ -5582,15 +5582,15 @@ double  A)             // I    curvature
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Function:  gauss2marginal
 //                                                     -cool(g.x + x.A.x/2)
-//                (1/cool) log INTEGRAL dxdy P(x)P(y) e 
-//                                  
+//                (1/cool) log INTEGRAL dxdy P(x)P(y) e
+//
 //            where  g.x = g1*x + g2*y,  x.A.x = A11*x*x + 2*A12*x*y + A22*y*y
 //            and  x,y  are non-zero fluxes
 //
 // History:   JS    2 Jan 2002
 //                 19 Jul 2003   "switch" recoding
 //-----------------------------------------------------------------------------
-static 
+static
 double gauss2marginal( //   O  value, calculated OK even if cool=0
 int     MassInf,       // I    Prior (0=monkeys,1=pos,2=posneg,3=gauss)
 double  cool,          // I    Annealing coefficient
@@ -5672,7 +5672,7 @@ double  A22)           // I    curvature
 //                 19 Jul 2003   "switch" recoding
 //                 13 Aug 2003   q into output
 //-----------------------------------------------------------------------------
-static 
+static
 double gauss1sample( //   O  flux z
 int      MassInf,    // I    Prior (0=monkeys,1=pos,2=posneg,3=gauss)
 Rand_t   Rand,       // I O  random generator state
@@ -5711,7 +5711,7 @@ double   A)          // I    curvature
 //                 19 Jul 2003   "switch" recoding
 //                 13 Aug 2003   q into output
 //-----------------------------------------------------------------------------
-static 
+static
 void gauss2sample(
 int      MassInf,    // I    Prior (0=monkeys,1=pos,2=posneg,3=gauss)
 Rand_t   Rand,       // I O  random generator state
@@ -5805,7 +5805,7 @@ double*  Acc)      // I    Background                [Ndata]
 //              (1/cool) log INTEGRAL dPrior (Lhood / L0)^cool
 //
 //            for entire atom with Poisson likelihood
-//                               
+//
 // History:   JS   18 Aug 2003, 12 Sep 2003
 //-----------------------------------------------------------------------------
 static
@@ -5846,7 +5846,7 @@ Exit:
 //              (1/cool) log INTEGRAL dPrior (Lhood / L0)^cool
 //
 //            for two entire atoms with Poisson likelihood
-//                               
+//
 // History:   JS   18 Aug 2003, 12 Sep 2003
 //-----------------------------------------------------------------------------
 static
@@ -6115,7 +6115,7 @@ double*  Flux2)    // I    Fluxes of 2nd atom      [Valency]
 //                    z=0
 //
 //            Counts are integer approximations to cooled data, cool*(Data+Acc)
-//                               
+//
 // History:   JS   18 Aug 2003, 12 Sep 2003
 //-----------------------------------------------------------------------------
 static

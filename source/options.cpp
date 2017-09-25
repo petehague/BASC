@@ -75,24 +75,27 @@ void optDict::readCL (int argc, char **argv){
 */
 int32_t optDict::getint(string key) {
     int index = 0;
-    while (key.compare(name[index])!=0) index++;
+    while (key.compare(name[index])!=0 && index<data.size()) index++;
+    if (index==data.size()) return 0;
     return *(int32_t *)data[index];
 }
 
 double optDict::getdouble(string key) {
     int index = 0;
-    while (key.compare(name[index])!=0) index++;
+    while (key.compare(name[index])!=0 && index<data.size()) index++;
+    if (index==data.size()) return 0;
     return *(double *)data[index];
 }
 
 string optDict::getstring(string key) {
     int index = 0;
-    while (key.compare(name[index])!=0) index++;
+    while (key.compare(name[index])!=0 && index<data.size()) index++;
+    if (index==data.size()) return "";
     return *(string *)data[index];
 }
 
 void optDict::report() {
-    for (auto i=0;i<name.size();i++) {
+    for (uint32_t i=0;i<name.size();i++) {
         cout << name[i] << " = ";
         switch (type[i]) {
             case opt_str:

@@ -4,6 +4,7 @@
 #include <fstream>
 #include <sstream>
 #include <chrono>
+#include <iomanip>
 
 #include "../include/skimage.hpp"
 #include "../bayesys/bayesys3.h"
@@ -11,6 +12,7 @@
 
 skimage dirtyMap, dirtyBeam, primaryBeam;
 skimage flatDirtyMap, flatDirtyBeam, flatPrimaryBeam;
+skimage altMap, altBeam;
 double sigmasq, fluxscale, freqscale;
 
 uint32_t imagesize, imagedepth;
@@ -18,6 +20,13 @@ uint32_t imagesize, imagedepth;
 optDict options;
 
 bool cubeSwitch = false;
+bool altSwitch = false;
+
+vector <uint32_t> sourcex;
+vector <uint32_t> sourcey;
+vector <double> sourceflux;
+double sourcewidth;
+double errscale;
 
 struct UserCommonStr {
   uint32_t nmodels;
@@ -32,13 +41,38 @@ struct UserCommonStr {
   vector <double> fsig;
 };
 
-void setup(string mapfile, string psffile, string pbcorfile) {
+void addSource(skimage map, uint32_t x, uint32_t y, double f, double sig) {
+  uint32_t mx = map.getxsize();
+  uint32_t my = map.getysize();
+
+  //TODO Normalise flux
+
+  for (auto v=0;v<my;v++) {
+    for (auto u=0;u<mx;u++) {
+      double rsq = (u-x)*(u-x)+(v-y)*(v-y);
+      double flux = f*exp(-(rsq/(sig*sig)));
+      map.add(twov(u,v), flux);
+    }
+  }
+}
+
+void setup(string mapfile, string psffile, string pbcorfile, string metafile) {
   fstream imagefile;
   uint16_t y=0;
   uint32_t beamsize;
+  double x0,dx,y0,dy;
+  uint32_t xref, yref;
+
+  imagefile.open(metafile, fstream::in);
+  imagefile >> x0 >> dx >> xref >> y0 >> dy >> yref;
+  imagefile.close();
 
   dirtyMap.init(imagesize,imagesize,imagedepth);
+  dirtyMap.setgrid(0,xref,x0,dx);
+  dirtyMap.setgrid(1,yref,y0,dy);
   primaryBeam.init(imagesize,imagesize,imagedepth);
+  primaryBeam.setgrid(0,xref,x0,dx);
+  primaryBeam.setgrid(1,yref,y0,dy);
 
   if (imagedepth>1) {
     flatDirtyMap.init(imagesize, imagesize, 1);
@@ -86,7 +120,10 @@ void setup(string mapfile, string psffile, string pbcorfile) {
   imagefile.close();
   imagefile.open(psffile, fstream::in);
 
+  // Assumes equal beam size at this point
   dirtyBeam.init(beamsize,beamsize,imagedepth);
+  dirtyBeam.setgrid(0,xref,x0,dx);
+  dirtyBeam.setgrid(1,yref,y0,dy);
 
   if (imagedepth>1) {
     flatDirtyBeam.init(beamsize, beamsize, 1);
@@ -110,6 +147,7 @@ void setup(string mapfile, string psffile, string pbcorfile) {
 
 
   sigmasq = dirtyMap.noise(primaryBeam);
+  sigmasq = 8.6e-5;
 
   if (beamsize <= imagesize) {
     // cout << "Beam size " << beamsize << " padded out to " << beamsize+imagesize << endl;
@@ -133,6 +171,16 @@ void setup(string mapfile, string psffile, string pbcorfile) {
   //fluxscale = 1;
 
   freqscale = 1./(double)imagedepth;
+
+  //TODO add in metadata to this skimage
+  if (altSwitch) {
+    altMap.init(errscale, errscale, 1);
+    altBeam.init(errscale, errscale, 1);
+    for (auto i=0;i<sourcex.size();i++) {
+      addSource(altMap, sourcex[i], sourcey[i], sourceflux[i], sourcewidth);
+    }
+    addSource(altBeam, errscale/2, errscale/2, 1, sourcewidth);
+  }
 }
 
 extern "C" {
@@ -166,6 +214,10 @@ int UserBuild(double *like, CommonStr *Common, ObjectStr* Member, int natoms, in
   }
 
   *like = dirtyMap.deconv(dirtyBeam,primaryBeam,&points[0],&flux[0],flux.size());
+
+  if (altSwitch) {
+    *like = *like + altMap.deconv(altBeam,&points[0],&flux[0],flux.size());
+  }
 
   //*like = dirtyMap.deconv(dirtyBeam,&points[0],&flux[0],flux.size());
 
@@ -213,7 +265,7 @@ int UserMonitor(CommonStr *Common, ObjectStr *Members) {
 }
 
 int main(int argc, char **argv) {
-  fstream logfile, chainfile;
+  fstream logfile, chainfile,sourcefile;
   chrono::system_clock::time_point startpoint;
   double elapsed, noise, median, atoms, datoms;
   uint32_t cx, cy, code;
@@ -221,18 +273,18 @@ int main(int argc, char **argv) {
   ObjectStr *Members;
   UserCommonStr UserCommon[1];
 
-  if (argc<4) {
+  if (argc<5) {
     cerr << "Too few arguments" << endl;
     return 0;
   }
 
-  imagesize = stoi(argv[4]);
+  imagesize = stoi(argv[5]);
   cout << "Map size: " << imagesize << endl;
-  imagedepth = stoi(argv[5]);
+  imagedepth = stoi(argv[6]);
   cout << "Number of frequency channels: " << imagedepth << endl;
   if (imagedepth>1) { cubeSwitch = true; }
 
-  setup(argv[1],argv[2],argv[3]);
+  setup(argv[1],argv[2],argv[3],argv[4]);
 
   noise = dirtyMap.noise();
   median = dirtyMap.median();
@@ -245,6 +297,21 @@ int main(int argc, char **argv) {
 
   options.readFile("config.txt");
   //options.report();
+
+  if (options.getint("Sources")>0) {
+    sourcefile.open("sources.txt", fstream::in);
+    for (string line; getline(sourcefile, line); ) {
+        stringstream linereader(line);
+        double x,y,f,s;
+        linereader >> x >> y >> f >> s;
+        sourcex.push_back(x);
+        sourcey.push_back(y);
+        sourceflux.push_back(f);
+        sourcewidth = s;
+    }
+    altSwitch = true;
+    sourcefile.close();
+  }
 
   Common.MinAtoms = options.getint("MinAtoms");
   Common.MaxAtoms = options.getint("MaxAtoms");
@@ -278,7 +345,17 @@ int main(int argc, char **argv) {
 
   chainfile.open("chain.txt", fstream::out);
   for (auto i=0;i<UserCommon->x.size();i++) {
-    chainfile << UserCommon->x[i] << " " << UserCommon->y[i] << " " << UserCommon->F[i];
+    chainfile << fixed << setprecision(9) << UserCommon->x[i] << " " << UserCommon->y[i] << " " << UserCommon->F[i];
+    if (cubeSwitch) {
+      chainfile << " " << UserCommon->fmu[i] << " " << UserCommon->fsig[i];
+    }
+    chainfile << endl;
+  }
+  chainfile.close();
+
+  chainfile.open("chainreal.txt", fstream::out);
+  for (auto i=0;i<UserCommon->x.size();i++) {
+    chainfile << fixed << setprecision(9) << dirtyMap.real(0,UserCommon->x[i]) << " " << dirtyMap.real(1,UserCommon->y[i]) << " " << UserCommon->F[i];
     if (cubeSwitch) {
       chainfile << " " << UserCommon->fmu[i] << " " << UserCommon->fsig[i];
     }

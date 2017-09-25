@@ -306,14 +306,14 @@ void skimage::pad(uint32_t dx, uint32_t dy, double contents) {
 }
 
 //Basic evaluator
-double skimage::deconv(skimage &other, twov *points, double *flux, uint32_t n) {
+double skimage::deconv(skimage &other, twov *points, double *flux, uint64_t n) {
   double result = 0;
 
   uint32_t cx = other.getxsize()*0.5;
   uint32_t cy = other.getysize()*0.5;
-  for (uint32_t i=0;i<n;i++) {
+  for (uint64_t i=0;i<n;i++) {
     result += 2*flux[i]*buffer[coords(points[i].x, points[i].y,0)];
-    for (uint32_t j=0;j<n;j++) {
+    for (uint64_t j=0;j<n;j++) {
       uint32_t u = cx + points[j].x-points[i].x;
       uint32_t v = cy + points[j].y-points[i].y;
       result -= flux[i]*flux[j]*other.get(u,v,0);
@@ -324,7 +324,7 @@ double skimage::deconv(skimage &other, twov *points, double *flux, uint32_t n) {
 }
 
 //Evalutator using frequency information and primary beam
-double skimage::deconv(skimage &other, skimage &pbeam, twov *points, double *flux, double *fmu, double *fsig, uint32_t n) {
+double skimage::deconv(skimage &other, skimage &pbeam, twov *points, double *flux, double *fmu, double *fsig, uint64_t n) {
   double result = 0;
 
   uint32_t cx = other.getxsize()*0.5;
@@ -332,10 +332,10 @@ double skimage::deconv(skimage &other, skimage &pbeam, twov *points, double *flu
   uint32_t cf = other.getfsize();
 
   for (uint32_t k=0;k<cf;k++) {
-    for (uint32_t i=0;i<n;i++) {
+    for (uint64_t i=0;i<n;i++) {
       double fi = flux[i]*exp(-(k-fmu[i])*(k-fmu[i])/(fsig[i]*fsig[i]))*pbeam.get(points[i].x,points[i].y,k);
       result += 2*fi*buffer[coords(points[i].x, points[i].y,k)];
-      for (uint32_t j=0;j<n;j++) {
+      for (uint64_t j=0;j<n;j++) {
         double fj = flux[j]*exp(-(k-fmu[j])*(k-fmu[j])/(fsig[j]*fsig[j]))*pbeam.get(points[j].x,points[j].y,k);
         uint32_t u = cx + points[j].x-points[i].x;
         uint32_t v = cy + points[j].y-points[i].y;
@@ -349,19 +349,19 @@ double skimage::deconv(skimage &other, skimage &pbeam, twov *points, double *flu
 
 
 //Evalutator including primary beam
-double skimage::deconv(skimage &other, skimage &pbeam, twov *points, double *flux, uint32_t n) {
+double skimage::deconv(skimage &other, skimage &pbeam, twov *points, double *flux, uint64_t n) {
   double result = 0;
   double ourflux[n];
 
-  for (uint32_t i=0;i<n;i++) {
+  for (uint64_t i=0;i<n;i++) {
     ourflux[i] = flux[i]*pbeam.get(points[i].x,points[i].y,0);
   }
 
   uint32_t cx = other.getxsize()*0.5;
   uint32_t cy = other.getysize()*0.5;
-  for (uint32_t i=0;i<n;i++) {
+  for (uint64_t i=0;i<n;i++) {
     result += 2*ourflux[i]*buffer[coords(points[i].x, points[i].y,0)];
-    for (uint32_t j=0;j<n;j++) {
+    for (uint64_t j=0;j<n;j++) {
       uint32_t u = cx + points[j].x-points[i].x;
       uint32_t v = cy + points[j].y-points[i].y;
       result -= ourflux[i]*ourflux[j]*other.get(u,v,0);
@@ -417,4 +417,22 @@ void skimage::setnoise(double value) {
 
 double skimage::getnoise() {
   return noiseLevel;
+}
+
+void skimage::setgrid(uint8_t axis, uint32_t crpix, double crval, double cdelt) {
+  double zeroval = crval-((double)crpix*cdelt);
+  if (axis==0) {
+    x_0 = zeroval;
+    x_delt = cdelt;
+  } else {
+    y_0 = zeroval;
+    y_delt = cdelt;
+  }
+}
+
+double skimage::real(uint8_t axis, double parval) {
+  if (axis==0) {
+    return parval*x_delt + x_0;
+  }
+  return parval*y_delt + y_0;
 }

@@ -20,8 +20,8 @@ struct twov {
 
 class skimage {
   uint32_t x_size, y_size, f_size, fxs, totalsize;
-  twov pointing,dx_sky, dy_sky; //This model will break down for larger images
-  double freq_ref, dfreq;
+  double x_0, y_0, x_delt, y_delt;
+  //double freq_ref, dfreq;
   double *buffer;
   uint32_t coords(uint32_t x, uint32_t y, uint32_t f) {
     return f+(x*f_size)+(y*fxs);
@@ -55,9 +55,9 @@ public:
   void scan(uint32_t psize, double threshold, double stdev);
   void crop(uint32_t nx, uint32_t ny);
   void pad(uint32_t dx, uint32_t dy, double contents);
-  double deconv(skimage &other, twov *points, double *flux, uint32_t n);
-  double deconv(skimage &other, skimage &pbeam, twov *points, double *flux, double *fmu, double *fsig, uint32_t n);
-  double deconv(skimage &other, skimage &pbeam, twov *points, double *flux, uint32_t n);
+  double deconv(skimage &other, twov *points, double *flux, uint64_t n);
+  double deconv(skimage &other, skimage &pbeam, twov *points, double *flux, double *fmu, double *fsig, uint64_t n);
+  double deconv(skimage &other, skimage &pbeam, twov *points, double *flux, uint64_t n);
   void subbeam(skimage &other, twov points, double flux);
   void subtract(twov points, double flux);
   void add(twov points, double flux);
@@ -65,5 +65,7 @@ public:
   double fluxscale(skimage &beam);
   void setnoise(double value);
   double getnoise();
+  void setgrid(uint8_t axis, uint32_t crpix, double crval, double cdelt);
+  double real(uint8_t axis, double value);
 };
 #endif

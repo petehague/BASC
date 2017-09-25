@@ -27,6 +27,15 @@ def run(dmap, dbeam, dflux):
     mapsize = dirtyMap[0].header['NAXIS1']
     mapdepth = dirtyMap[0].header['NAXIS3']
 
+    output = open("meta.txt", "w")
+    output.write("{:f} {:f} {:f} {:f} {:f} {:f}\n".format(dirtyMap[0].header['CRVAL1'],
+                                              dirtyMap[0].header['CDELT1'],
+                                              int(dirtyMap[0].header['CRPIX1']),
+                                              dirtyMap[0].header['CRVAL2'],
+                                              dirtyMap[0].header['CDELT2'],
+                                              int(dirtyMap[0].header['CRPIX2'])))
+    output.close()
+
     filelist = []
     for infile in [dmap, dbeam, dflux]:
         outfile = re.split("\.", infile)[:-1]
@@ -42,13 +51,18 @@ def run(dmap, dbeam, dflux):
         for y in range(mapsize):
             for x in range(mapsize):
                 for f in range(mapdepth):
-                    output.write(" {}".format(image[0].data[0, f, y, x]))
+                    mapdata = image[0].data[0, f, y, x]
+                    if np.isfinite(mapdata):
+                        output.write(" {}".format(mapdata))
+                    else:
+                        output.write(" 0")
             output.write("\n")
         output.close()
         filelist.append(outfile)
+        image.close()
 
     os.system(os.path.dirname(os.path.abspath(__file__)) +
-              "/mcmc {} {} {} {} {}".format(filelist[0],
+              "/mcmc {} {} {} meta.txt {} {}".format(filelist[0],
                                             filelist[1],
                                             filelist[2],
                                             mapsize,

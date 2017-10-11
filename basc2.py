@@ -2,9 +2,7 @@
 import sys
 import os
 
-sys.path.append(os.path.dirname(os.path.realpath(__file__))+"/build/lib.macosx-10.12-intel-2.7/")
-print(os.path.dirname(os.path.realpath(__file__))+"/build/lib.macosx-10.12-intel-2.7/")
-
+#sys.path.append(os.path.dirname(os.path.realpath(__file__))+"/build/lib.macosx-10.12-intel-2.7/")
 
 import bascmod
 from astropy.io import fits

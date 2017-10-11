@@ -272,7 +272,7 @@ static PyMethodDef bascmethods[] = {
   {NULL, NULL, 0, NULL}
 };
 
-#ifdef PYTHREE
+#if PY_MAJOR_VERSION > 2
 static struct PyModuleDef bascmodule = {
   PyModuleDef_HEAD_INIT,
   "bascmod",
@@ -281,8 +281,8 @@ static struct PyModuleDef bascmodule = {
   bascmethods
 };
 PyMODINIT_FUNC
-PyInit_spam(void) {
-  return PyModule_Create(&bascmethods);
+PyInit_bascmod(void) {
+  return PyModule_Create(&bascmodule);
 #else
 PyMODINIT_FUNC
 initbascmod(void) {

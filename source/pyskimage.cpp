@@ -137,7 +137,7 @@ static PyMethodDef skmethods[] = {
   {NULL, NULL, 0, NULL}
 };
 
-#ifdef PYTHREE
+#if PY_MAJOR_VERSION > 2
 static struct PyModuleDef skmodule = {
   PyModuleDef_HEAD_INIT,
   "skimage",
@@ -146,7 +146,7 @@ static struct PyModuleDef skmodule = {
   skmethods
 };
 PyMODINIT_FUNC
-PyInit_spam(void) {
+PyInit_skimage(void) {
   return PyModule_Create(&skmodule);
 #else
 PyMODINIT_FUNC

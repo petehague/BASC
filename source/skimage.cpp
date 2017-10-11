@@ -262,6 +262,9 @@ void skimage::crop(uint32_t nx, uint32_t ny) {
     }
   }
 
+  x_0 += x_delt*(double)dx;
+  y_0 += y_delt*(double)dy;
+
   buffer = newbuffer;
   x_size = nx;
   y_size = ny;
@@ -294,6 +297,9 @@ void skimage::pad(uint32_t dx, uint32_t dy, double contents) {
       }
     }
   }
+
+  x_0 -= x_delt*(double)dx;
+  y_0 -= y_delt*(double)dy;
 
   buffer = newbuffer;
   x_size = nx;

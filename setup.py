@@ -6,6 +6,7 @@ import glob
 
 skmodule = Extension('skimage',
                      sources=['source/pyskimage.cpp', 'source/skimage.cpp'],
+                     language='c++',
                      extra_compile_args=['-std=c++11'])
 setup(ext_modules=[skmodule])
 
@@ -17,6 +18,6 @@ bascmodule = Extension('bascmod',
 
 setup(ext_modules=[bascmodule])
 
-filelist = glob.glob("build/lib*")
+# filelist = glob.glob("build/lib*")
 # copy(filelist[0]+"/bascmod.so", ".")
 # copy(filelist[0]+"/skimage.so", ".")

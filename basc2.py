@@ -2,7 +2,9 @@
 import sys
 import os
 
-sys.path.append(os.getcwd()+"/build/lib.macosx-10.12-intel-2.7/")
+sys.path.append(os.path.dirname(os.path.realpath(__file__))+"/build/lib.macosx-10.12-intel-2.7/")
+print(os.path.dirname(os.path.realpath(__file__))+"/build/lib.macosx-10.12-intel-2.7/")
+
 
 import bascmod
 from astropy.io import fits
@@ -22,6 +24,13 @@ def loadFitsFile(filename, index):
     mx = source[0].header['NAXIS1']
     my = source[0].header['NAXIS2']
     bascmod.map(fitsraster(source[0].data, mx, my), mx, my, index)
+    crpix1 = source[0].header['CRPIX1']
+    crval1 = source[0].header['CRVAL1']
+    cdelt1 = source[0].header['CDELT1']
+    crpix2 = source[0].header['CRPIX2']
+    crval2 = source[0].header['CRVAL2']
+    cdelt2 = source[0].header['CDELT2']
+
 
 def loadMap(filename):
     loadFitsFile(filename, 0)

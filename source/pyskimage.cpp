@@ -56,7 +56,7 @@ static PyObject* skimage_makebeam(PyObject *self, PyObject *args) {
 
   dirtyBeam.pad(xb,yb,0);
 
-  return PyInt_FromLong(1);
+  return PyLong_FromLong(1);
 }
 
 static PyObject* skimage_makemap(PyObject *self, PyObject *args) {
@@ -67,7 +67,7 @@ static PyObject* skimage_makemap(PyObject *self, PyObject *args) {
 
   parsefrompy(&dirtyMap,map,xm,ym);
 
-  return PyInt_FromLong(1);
+  return PyLong_FromLong(1);
 }
 
 static PyObject* skimage_deconvolve(PyObject *self, PyObject *args) {
@@ -113,7 +113,7 @@ static PyObject* skimage_render(PyObject *self, PyObject *args) {
 
   image.scan(16, image.mean(),image.stdev(image.mean()));
 
-  return PyInt_FromLong(1);
+  return PyLong_FromLong(1);
 }
 
 static PyObject* skimage_fluxscale(PyObject *self, PyObject *args) {
@@ -126,7 +126,7 @@ static PyObject* skimage_version(PyObject *self, PyObject *args) {
   return PyLong_FromLong(1);
 }
 
-static PyMethodDef skmodule[] = {
+static PyMethodDef skmethods[] = {
   {"version", skimage_version, METH_VARARGS, ""},
   {"render", skimage_render, METH_VARARGS, ""},
   {"deconvolve", skimage_deconvolve, METH_VARARGS, ""},
@@ -137,11 +137,20 @@ static PyMethodDef skmodule[] = {
   {NULL, NULL, 0, NULL}
 };
 
-PyMODINIT_FUNC
-initskimage(void) {
 #ifdef PYTHREE
+static struct PyModuleDef skmodule = {
+  PyModuleDef_HEAD_INIT,
+  "skimage",
+  NULL,
+  -1,
+  skmethods
+};
+PyMODINIT_FUNC
+PyInit_spam(void) {
   return PyModule_Create(&skmodule);
 #else
-  (void) Py_InitModule("skimage", skmodule);
+PyMODINIT_FUNC
+initskimage(void) {
+  (void) Py_InitModule("skimage", skmethods);
 #endif
 }

@@ -131,6 +131,31 @@ void parsefrompy(skimage *target, PyObject* source, uint32_t x, uint32_t y) {
   }*/
 }
 
+
+static PyObject* bascmodule_setgrid(PyObject *self, PyObject *args) {
+  uint32_t crpix1, crpix2, mapid;
+  double crval1, crval2, cdelt1, cdelt2;
+
+  if (!PyArg_ParseTuple(args,"iiddidd", &mapid, &crpix1, &crval1, &cdelt1, &crpix2, &crval2, &cdelt2)) { return NULL; }
+
+  if (mapid==0) {
+    dirtyMap.setgrid(0,crpix1,crval1,cdelt1);
+    dirtyMap.setgrid(1,crpix2,crval2,cdelt2);
+  }
+
+  if (mapid==1) {
+    dirtyBeam.setgrid(0,crpix1,crval1,cdelt1);
+    dirtyBeam.setgrid(1,crpix2,crval2,cdelt2);
+  }
+
+  if (mapid==2) {
+    primaryBeam.setgrid(0,crpix1,crval1,cdelt1);
+    primaryBeam.setgrid(1,crpix2,crval2,cdelt2);
+  }
+
+  return PyLong_FromLong(1);
+}
+
 static PyObject* bascmodule_map(PyObject *self, PyObject *args) {
   uint32_t xb,yb,id;
   PyObject *map;
@@ -158,7 +183,7 @@ static PyObject* bascmodule_map(PyObject *self, PyObject *args) {
   //TODO: add support for Cubes
   mapdepth = 1;
 
-  return PyInt_FromLong(1);
+  return PyLong_FromLong(1);
 }
 
 static PyObject* bascmodule_run(PyObject *self, PyObject *args) {
@@ -197,7 +222,7 @@ static PyObject* bascmodule_run(PyObject *self, PyObject *args) {
   Members = new ObjectStr[Common.ENSEMBLE];
   code = BayeSys3(&Common,Members);
 
-  return PyInt_FromLong(code);
+  return PyLong_FromLong(code);
 }
 
 static PyObject* bascmodule_chain(PyObject *self, PyObject *args) {
@@ -237,8 +262,9 @@ static PyObject* bascmodule_version(PyObject *self, PyObject *args) {
   return PyLong_FromLong(1);
 }
 
-static PyMethodDef bascmodule[] = {
+static PyMethodDef bascmethods[] = {
   {"version", bascmodule_version, METH_VARARGS, ""},
+  {"grid", bascmodule_setgrid, METH_VARARGS, ""},
   {"map", bascmodule_map, METH_VARARGS, ""},
   {"run", bascmodule_run, METH_VARARGS, ""},
   {"chain", bascmodule_chain, METH_VARARGS, ""},
@@ -246,12 +272,21 @@ static PyMethodDef bascmodule[] = {
   {NULL, NULL, 0, NULL}
 };
 
+#ifdef PYTHREE
+static struct PyModuleDef bascmodule = {
+  PyModuleDef_HEAD_INIT,
+  "bascmod",
+  NULL,
+  -1,
+  bascmethods
+};
+PyMODINIT_FUNC
+PyInit_spam(void) {
+  return PyModule_Create(&bascmethods);
+#else
 PyMODINIT_FUNC
 initbascmod(void) {
-#ifdef PYTHREE
-  return PyModule_Create(&bascmodule);
-#else
-  (void) Py_InitModule("bascmod", bascmodule);
+  (void) Py_InitModule("bascmod", bascmethods);
 #endif
 }
 #else

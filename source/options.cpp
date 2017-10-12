@@ -57,10 +57,13 @@ void optDict::readFile (string filename) {
     fstream optfile;
 
     optfile.open(filename.c_str(), fstream::in);
-    for (string line; getline(optfile, line); ) {
-        parse(line);
-    }
+
+    if (optfile) {
+        for (string line; getline(optfile, line); ) {
+            parse(line);
+        }
     optfile.close();
+    }
 }
 
 void optDict::readCL (int argc, char **argv){

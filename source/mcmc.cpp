@@ -147,7 +147,7 @@ void setup(string mapfile, string psffile, string pbcorfile, string metafile) {
 
 
   sigmasq = dirtyMap.noise(primaryBeam);
-  sigmasq = 8.6e-5;
+  //sigmasq = 8.6e-5;
 
   if (beamsize <= imagesize) {
     // cout << "Beam size " << beamsize << " padded out to " << beamsize+imagesize << endl;
@@ -167,7 +167,7 @@ void setup(string mapfile, string psffile, string pbcorfile, string metafile) {
 
   //fluxscale = dirtyMap.fluxscale(dirtyBeam);
   fluxscale = sqrt(sigmasq);
-  fluxscale = 1e-5;
+  //fluxscale = 1e-5;
   cout << "Flux Scale = " << fluxscale << endl;
   //fluxscale = 1;
 

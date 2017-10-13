@@ -15,7 +15,7 @@ skimage flatDirtyMap, flatDirtyBeam, flatPrimaryBeam;
 skimage altMap, altBeam;
 double sigmasq, fluxscale, freqscale;
 
-uint32_t imagesize, imagedepth;
+uint32_t imagesize, imagedepth, modelIndex;
 
 optDict options;
 
@@ -39,6 +39,7 @@ struct UserCommonStr {
   vector <double> F;
   vector <double> fmu;
   vector <double> fsig;
+  vector <uint32_t> modelIndex;
 };
 
 void addSource(skimage map, uint32_t x, uint32_t y, double f, double sig) {
@@ -62,6 +63,8 @@ void setup(string mapfile, string psffile, string pbcorfile, string metafile) {
   uint32_t beamsize;
   double x0,dx,y0,dy;
   uint32_t xref, yref;
+
+  modelIndex = 0;
 
   imagefile.open(metafile, fstream::in);
   imagefile >> x0 >> dx >> xref >> y0 >> dy >> yref;
@@ -231,6 +234,7 @@ int UserMonitor(CommonStr *Common, ObjectStr *Members) {
 
   if (Common->cool > 1.) Common->cool = 1.;
   if (Common->cool < 1.) {
+  if (Common->cool < 1.) {
     UC->burnin += 1;
     if (Common->cool>UC->cool) {
       //cout << Common->cool << " " << UC->burnin << endl;
@@ -254,8 +258,9 @@ int UserMonitor(CommonStr *Common, ObjectStr *Members) {
         UC->fmu.push_back(Cube[i][3]*freqscale);
         UC->fsig.push_back(Cube[i][4]*freqscale);
       }
-      UC->modelIndex.push_back(modleindex);
+      UC->modelIndex.push_back(modelIndex);
     }
+    modelIndex++;
   }
 
   if (UC->nmodels>UC->maxmodels) {

@@ -234,7 +234,6 @@ int UserMonitor(CommonStr *Common, ObjectStr *Members) {
 
   if (Common->cool > 1.) Common->cool = 1.;
   if (Common->cool < 1.) {
-  if (Common->cool < 1.) {
     UC->burnin += 1;
     if (Common->cool>UC->cool) {
       //cout << Common->cool << " " << UC->burnin << endl;
@@ -269,6 +268,7 @@ int UserMonitor(CommonStr *Common, ObjectStr *Members) {
     return 0;
   }
 }
+
 }
 
 int main(int argc, char **argv) {

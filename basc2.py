@@ -6,6 +6,7 @@ import os
 
 import bascmod
 from astropy.io import fits
+from astropy.table import Table
 
 # TODO: This needs to be repaced with a faster interface
 def fitsraster(image, x, y):
@@ -39,6 +40,15 @@ def loadBeam(filename):
 def loadPBCor(filename):
     loadFitsFile(filename, 2)
 
+def run():
+    bascmod.run()
+
+def getChain():
+    x = bascmod.chain(0)
+    y = bascmod.chain(1)
+    f = bascmod.chain(2)
+    result = Table([x, y, f], names = ('x', 'y', 'F'))
+    return result
 
 if __name__ == "__main__":
     print("Load Image")

@@ -254,6 +254,7 @@ int UserMonitor(CommonStr *Common, ObjectStr *Members) {
         UC->fmu.push_back(Cube[i][3]*freqscale);
         UC->fsig.push_back(Cube[i][4]*freqscale);
       }
+      UC->modelIndex.push_back(modleindex);
     }
   }
 

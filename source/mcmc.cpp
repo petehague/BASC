@@ -351,7 +351,7 @@ int main(int argc, char **argv) {
 
   chainfile.open("chain.txt", fstream::out);
   for (auto i=0;i<UserCommon->x.size();i++) {
-    chainfile << fixed << setprecision(9) << UserCommon->x[i] << " " << UserCommon->y[i] << " " << UserCommon->F[i];
+    chainfile << fixed << setprecision(9) << UserCommon->x[i] << " " << UserCommon->y[i] << " " << UserCommon->F[i] << " " << UserCommon->modelIndex[i];
     if (cubeSwitch) {
       chainfile << " " << UserCommon->fmu[i] << " " << UserCommon->fsig[i];
     }
@@ -361,7 +361,7 @@ int main(int argc, char **argv) {
 
   chainfile.open("chainreal.txt", fstream::out);
   for (auto i=0;i<UserCommon->x.size();i++) {
-    chainfile << fixed << setprecision(9) << dirtyMap.real(0,UserCommon->x[i]) << " " << dirtyMap.real(1,UserCommon->y[i]) << " " << UserCommon->F[i];
+    chainfile << fixed << setprecision(9) << dirtyMap.real(0,UserCommon->x[i]) << " " << dirtyMap.real(1,UserCommon->y[i]) << " " << UserCommon->F[i] << " " << UserCommon->modelIndex[i];
     if (cubeSwitch) {
       chainfile << " " << UserCommon->fmu[i] << " " << UserCommon->fsig[i];
     }

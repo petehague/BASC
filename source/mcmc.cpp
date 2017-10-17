@@ -224,7 +224,6 @@ int UserBuild(double *like, CommonStr *Common, ObjectStr* Member, int natoms, in
   }
 
   //*like = dirtyMap.deconv(dirtyBeam,&points[0],&flux[0],flux.size());
-
   return 1;
 }
 
@@ -275,7 +274,7 @@ int main(int argc, char **argv) {
   fstream logfile, chainfile,sourcefile;
   chrono::system_clock::time_point startpoint;
   double elapsed, noise, median, atoms, datoms;
-  uint32_t cx, cy, code;
+  int32_t cx, cy, code;
   CommonStr Common;
   ObjectStr *Members;
   UserCommonStr UserCommon[1];

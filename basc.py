@@ -28,7 +28,7 @@ def run(dmap, dbeam, dflux):
     mapdepth = dirtyMap[0].header['NAXIS3']
 
     output = open("meta.txt", "w")
-    output.write("{:f} {:f} {:f} {:f} {:f} {:f}\n".format(dirtyMap[0].header['CRVAL1'],
+    output.write("{:f} {:f} {:d} {:f} {:f} {:d}\n".format(dirtyMap[0].header['CRVAL1'],
                                               dirtyMap[0].header['CDELT1'],
                                               int(dirtyMap[0].header['CRPIX1']),
                                               dirtyMap[0].header['CRVAL2'],

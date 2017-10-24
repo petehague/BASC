@@ -13,7 +13,7 @@
 skimage dirtyMap, dirtyBeam, primaryBeam;
 skimage flatDirtyMap, flatDirtyBeam, flatPrimaryBeam;
 skimage altMap, altBeam;
-double sigmasq, fluxscale, freqscale;
+double sigma, fluxscale, freqscale;
 
 uint32_t imagesize, imagedepth, modelIndex;
 
@@ -149,8 +149,7 @@ void setup(string mapfile, string psffile, string pbcorfile, string metafile) {
   imagefile.close();
 
 
-  sigmasq = dirtyMap.noise(primaryBeam);
-  //sigmasq = 8.6e-5;
+  sigma = dirtyMap.noise(primaryBeam);
 
   if (beamsize <= imagesize) {
     // cout << "Beam size " << beamsize << " padded out to " << beamsize+imagesize << endl;
@@ -163,13 +162,13 @@ void setup(string mapfile, string psffile, string pbcorfile, string metafile) {
 
   //dirtyBeam.scan(32,dirtyBeam.max()/1000,dirtyBeam.max()/10000);
 
-  //sigmasq = dirtyMap.noise(primaryBeam);
-  dirtyMap.setnoise(sigmasq);
-  cout << "Noise = " << sigmasq << " Jy/Beam" << endl;
-  sigmasq *= sigmasq;
+  //sigma = dirtyMap.noise(primaryBeam);
+  dirtyMap.setnoise(sigma);
+  cout << "Noise = " << sigma << " Jy/Beam" << endl;
+  sigma *= sigma;
 
   //fluxscale = dirtyMap.fluxscale(dirtyBeam);
-  fluxscale = sqrt(sigmasq);
+  fluxscale = sqrt(sigma);
   //fluxscale = 1e-5;
   cout << "Flux Scale = " << fluxscale << endl;
   //fluxscale = 1;

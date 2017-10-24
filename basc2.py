@@ -43,6 +43,11 @@ def loadPBCor(filename):
 def run():
     bascmod.run()
 
+def showall():
+    bascmod.show(0)
+    bascmod.show(1)
+    bascmod.show(2)
+
 def getChain():
     x = bascmod.chain(0)
     y = bascmod.chain(1)

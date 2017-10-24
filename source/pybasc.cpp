@@ -3,6 +3,8 @@
 #endif
 
 #include <iostream>
+#include <iomanip>
+#include <cmath>
 
 #include "../include/skimage.hpp"
 #include "../bayesys/bayesys3.h"
@@ -11,8 +13,8 @@
 using namespace std;
 
 skimage dirtyMap, dirtyBeam, primaryBeam;
-uint32_t mapsize, mapdepth;
-double sigmasq, fluxscale, freqscale;
+uint32_t mapsize, mapdepth, modelIndex;
+double sigma, fluxscale, freqscale;
 bool cubeSwitch = false;
 optDict options;
 
@@ -27,6 +29,7 @@ struct UserCommonStr {
   vector <double> F;
   vector <double> fmu;
   vector <double> fsig;
+  vector <uint32_t> modelIndex;
 };
 
 UserCommonStr UserCommon[1];
@@ -97,7 +100,9 @@ int UserMonitor(CommonStr *Common, ObjectStr *Members) {
         UC->fmu.push_back(Cube[i][3]*freqscale);
         UC->fsig.push_back(Cube[i][4]*freqscale);
       }
+      UC->modelIndex.push_back(modelIndex);
     }
+    modelIndex++;
   }
 
   if (UC->nmodels>UC->maxmodels) {
@@ -115,7 +120,7 @@ void parsefrompy(skimage *target, PyObject* source, uint32_t x, uint32_t y) {
   double value;
 
   target->init(x,y,1);
-/*
+
   if (PyList_Size(source)<(x*y)) {
     cout << "Not enough data provided" << endl;
     return;
@@ -128,7 +133,7 @@ void parsefrompy(skimage *target, PyObject* source, uint32_t x, uint32_t y) {
       PyArg_Parse(datum, "d", &value);
       target->set(u,v,0,value);
     }
-  }*/
+  }
 }
 
 
@@ -190,12 +195,13 @@ static PyObject* bascmodule_run(PyObject *self, PyObject *args) {
   uint32_t code;
   CommonStr Common;
   ObjectStr *Members;
+  fstream chainfile;
 
   //dirtyMap.init(512,512,1);
   //dirtyBeam.init(1024,1024,1);
   //primaryBeam.init(512,512,1);
 
-  dirtyMap.noise(primaryBeam);
+  fluxscale = dirtyMap.noise(primaryBeam);
 
   if (mapdepth>1) {
     Common.Ndim = 5;
@@ -209,7 +215,7 @@ static PyObject* bascmodule_run(PyObject *self, PyObject *args) {
   Common.MaxAtoms = options.getint("MaxAtoms");
   Common.Alpha = options.getint("Alpha");
   Common.Valency = options.getint("Valency");
-  Common.Iseed =  options.getint("Iseed")+10;
+  Common.Iseed =  options.getint("Iseed");
   Common.ENSEMBLE =  options.getint("Ensemble");
   Common.Method =  options.getint("Method");
   Common.Rate =  options.getint("Rate");
@@ -221,6 +227,16 @@ static PyObject* bascmodule_run(PyObject *self, PyObject *args) {
 
   Members = new ObjectStr[Common.ENSEMBLE];
   code = BayeSys3(&Common,Members);
+
+  chainfile.open("chain.txt", fstream::out);
+  for (auto i=0;i<UserCommon->x.size();i++) {
+    chainfile << fixed << setprecision(9) << UserCommon->x[i] << " " << UserCommon->y[i] << " " << UserCommon->F[i] << " " << UserCommon->modelIndex[i];
+    /*if (cubeSwitch) {
+      chainfile << " " << UserCommon->fmu[i] << " " << UserCommon->fsig[i];
+    }*/
+    chainfile << endl;
+  }
+  chainfile.close();
 
   return PyLong_FromLong(code);
 }

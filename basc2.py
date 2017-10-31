@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import sys
 import os
+import numpy as np
 
 #sys.path.append(os.path.dirname(os.path.realpath(__file__))+"/build/lib.macosx-10.12-intel-2.7/")
 
@@ -16,6 +17,14 @@ def fitsraster(image, x, y):
         for u in range(x):
             result.append(image[0,0,v,u])
             count += 1
+    return result
+
+def mapraster(rawmap):
+    mapsize = int(np.sqrt(len(rawmap)))
+    result = np.zeros(shape=(mapsize,mapsize))
+    for y in range(mapsize):
+        for x in range(mapsize):
+            result[x,y] = rawmap[y*mapsize + x]
     return result
 
 def loadFitsFile(filename, index):
@@ -40,6 +49,9 @@ def loadBeam(filename):
 def loadPBCor(filename):
     loadFitsFile(filename, 2)
 
+def map(index):
+    return mapraster(bascmod.getmap(index))
+
 def run():
     bascmod.run()
 
@@ -52,8 +64,21 @@ def getChain():
     x = bascmod.chain(0)
     y = bascmod.chain(1)
     f = bascmod.chain(2)
-    result = Table([x, y, f], names = ('x', 'y', 'F'))
+    k = bascmod.chain(3)
+    result = Table([x, y, f, k], names = ('x', 'y', 'F', 'k'))
     return result
+
+def getSlice(k):
+    result = getChain()
+    models = result.group_by('k')
+    mask = []
+    for index in range(1,len(models.groups.keys)):
+        n = models.groups.indices[index] - models.groups.indices[index-1]
+        if n==k:
+            mask += np.arange(models.groups.indices[index-1],models.groups.indices[index]).tolist()
+    # result = Table([x[mask],y[mask],f[mask],k[mask)]], names = ('x', 'y', 'F', 'k'))
+    return result[mask]
+
 
 if __name__ == "__main__":
     print("Load Image")

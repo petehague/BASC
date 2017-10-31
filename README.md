@@ -13,9 +13,10 @@ basc.py <dirty map file> <dirty psf file> <primary beam flux file>
 
 The Python script requires astropy and numpy in order to function. In addition, there is a script use_pymc.py which for comparison applies the same likelihood model using PyMC (which doesn't have all the functionality of BayeSys unfortunately)
 
-### Ongoing Work ###
+### Python Module ###
 
-The code will be more customisable soon, and will also include more facilities for post-processing.
+There is a python module, basc2.py, which is being developed alongside the command line utility. In the long term this will
+be the only way of using basc. It is still experimental at this time.
 
 ### Contact ###
 

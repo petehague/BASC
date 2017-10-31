@@ -191,6 +191,34 @@ static PyObject* bascmodule_map(PyObject *self, PyObject *args) {
   return PyLong_FromLong(1);
 }
 
+static PyObject* bascmodule_getmap(PyObject *self, PyObject *args) {
+  uint32_t mapIndex, listSize, axisSize;
+  PyObject *returnList;
+  skimage *mapPtr;
+
+  if (!PyArg_ParseTuple(args,"i", &mapIndex)) { return NULL; }
+
+  if (mapIndex==1) {
+    axisSize = mapsize*2;
+    mapPtr = &dirtyBeam;
+  } else {
+    axisSize = mapsize;
+    if (mapIndex==0) { mapPtr = &dirtyMap; }
+    if (mapIndex==2) { mapPtr = &primaryBeam; }
+  }
+
+  listSize = axisSize*axisSize;
+  returnList = PyList_New(listSize);
+  for (uint32_t y=0;y<axisSize;y++) {
+      for (uint32_t x=0;x<axisSize;x++) {
+        PyList_SetItem(returnList, x+y*axisSize, PyFloat_FromDouble((*mapPtr).get(x,y,0)));
+      }
+  }
+
+  return returnList;
+}
+
+
 static PyObject* bascmodule_run(PyObject *self, PyObject *args) {
   uint32_t code;
   CommonStr Common;
@@ -202,6 +230,7 @@ static PyObject* bascmodule_run(PyObject *self, PyObject *args) {
   //primaryBeam.init(512,512,1);
 
   fluxscale = dirtyMap.noise(primaryBeam);
+  dirtyMap.setnoise(fluxscale);
 
   if (mapdepth>1) {
     Common.Ndim = 5;
@@ -251,6 +280,13 @@ static PyObject* bascmodule_chain(PyObject *self, PyObject *args) {
   if (colIndex==0) { colPtr=&UserCommon->x; }
   if (colIndex==1) { colPtr=&UserCommon->y; }
   if (colIndex==2) { colPtr=&UserCommon->F; }
+  if (colIndex==3) {
+    vector <uint32_t> *intPtr=&UserCommon->modelIndex;
+    for (uint32_t i=0;i<UserCommon->nmodels;i++) {
+      PyList_SetItem(returnList, i, PyInt_FromLong((*intPtr)[i]));
+    }
+    return returnList;
+  }
 
   for (uint32_t i=0;i<UserCommon->nmodels;i++) {
     PyList_SetItem(returnList, i, PyFloat_FromDouble((*colPtr)[i]));
@@ -282,6 +318,7 @@ static PyMethodDef bascmethods[] = {
   {"version", bascmodule_version, METH_VARARGS, ""},
   {"grid", bascmodule_setgrid, METH_VARARGS, ""},
   {"map", bascmodule_map, METH_VARARGS, ""},
+  {"getmap", bascmodule_getmap, METH_VARARGS, ""},
   {"run", bascmodule_run, METH_VARARGS, ""},
   {"chain", bascmodule_chain, METH_VARARGS, ""},
   {"show", bascmodule_show, METH_VARARGS, ""},

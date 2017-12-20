@@ -1,12 +1,19 @@
 #!/usr/bin/env python
 
 import basc
-from astropy.io import fits
+from astropy.table import Table
 
-dmap = fits.open("ex_image.fits")
-dbeam = fits.open("ex_psf.fits")
-flux = fits.open("ex_flux.fits")
+basc.readConfig("config.txt")
 
-basc.run(dmap, dmap, flux)
+basc.loadMap("ex_image.fits")
+basc.loadBeam("ex_psf.fits")
+basc.loadPBCor("ex_flux.fits")
 
+basc.run()
+
+result = basc.getChain()
+
+# Add in any processing of results here
+
+result.write("chain.txt", format="ascii")
 print("Models written to chain.txt")

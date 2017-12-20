@@ -5,6 +5,8 @@
 #include <iostream>
 #include <iomanip>
 #include <cmath>
+#include <cstring>
+#include <cstdlib>
 
 #include "../include/skimage.hpp"
 #include "../bayesys/bayesys3.h"
@@ -33,6 +35,7 @@ struct UserCommonStr {
 };
 
 UserCommonStr UserCommon[1];
+CommonStr Common;
 
 extern "C" {
 int UserBuild(double *like, CommonStr *Common, ObjectStr* Member, int natoms, int dummy) {
@@ -218,10 +221,34 @@ static PyObject* bascmodule_getmap(PyObject *self, PyObject *args) {
   return returnList;
 }
 
+static PyObject* bascmodule_init(PyObject *self, PyObject *args) {
+  Common.UserCommon = (void *)UserCommon;
+
+  return PyLong_FromLong(1);
+}
+
+static PyObject* bascmodule_setOption(PyObject *self, PyObject *args) {
+  char *key;
+  char *value;
+
+  if (!PyArg_ParseTuple(args,"ss", &key, &value)) { return NULL; }
+
+  if (strcmp(key,"MinAtoms")==0) { Common.MinAtoms = atoi(value); }
+  if (strcmp(key,"MaxAtoms")==0) { Common.MaxAtoms = atoi(value); }
+  if (strcmp(key,"Alpha")==0) { Common.Alpha = atoi(value); }
+  if (strcmp(key,"Valency")==0) { Common.Valency = atoi(value); }
+  if (strcmp(key,"Iseed")==0) { Common.Iseed = atoi(value); }
+  if (strcmp(key,"Ensemble")==0) { Common.ENSEMBLE = atoi(value); }
+  if (strcmp(key,"Method")==0) { Common.Method = atoi(value); }
+  if (strcmp(key,"Rate")==0) { Common.Rate = atoi(value); }
+  if (strcmp(key,"maxmodels")==0) { UserCommon->maxmodels = atoi(value); }
+
+  return PyLong_FromLong(1);
+}
+
 
 static PyObject* bascmodule_run(PyObject *self, PyObject *args) {
   uint32_t code;
-  CommonStr Common;
   ObjectStr *Members;
   fstream chainfile;
 
@@ -238,7 +265,7 @@ static PyObject* bascmodule_run(PyObject *self, PyObject *args) {
     Common.Ndim = 3;
   }
 
-  options.readFile("config.txt");
+  /*options.readFile("config.txt");
 
   Common.MinAtoms = options.getint("MinAtoms");
   Common.MaxAtoms = options.getint("MaxAtoms");
@@ -249,8 +276,8 @@ static PyObject* bascmodule_run(PyObject *self, PyObject *args) {
   Common.Method =  options.getint("Method");
   Common.Rate =  options.getint("Rate");
   Common.UserCommon = (void *)UserCommon;
+  UserCommon->maxmodels =  options.getint("maxmodels");*/
   UserCommon->nmodels = 0;
-  UserCommon->maxmodels =  options.getint("maxmodels");
   UserCommon->burnin = 0;
   UserCommon->cool = 0;
 
@@ -322,6 +349,8 @@ static PyMethodDef bascmethods[] = {
   {"run", bascmodule_run, METH_VARARGS, ""},
   {"chain", bascmodule_chain, METH_VARARGS, ""},
   {"show", bascmodule_show, METH_VARARGS, ""},
+  {"init", bascmodule_init, METH_VARARGS, ""},
+  {"option", bascmodule_setOption, METH_VARARGS, ""},
   {NULL, NULL, 0, NULL}
 };
 

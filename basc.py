@@ -12,11 +12,9 @@ from astropy.table import Table
 
 bascmod.init()
 
-class view():
-    def __init__(self):
-        self.cpointer = 0
-        self.mx = 0
-        self.my = 0
+'''
+Utilities that don't invoke bascmod
+'''
 
 def readConfig(filename):
     optionsfile = open(filename, "r")
@@ -47,60 +45,78 @@ def mapraster(rawmap):
             result[x,y] = rawmap[y*mapsize + x]
     return result
 
-def loadFitsFile(filename, index):
-    source = fits.open(filename)
-    mx = source[0].header['NAXIS1']
-    my = source[0].header['NAXIS2']
-    bascmod.map(fitsraster(source[0].data, mx, my), mx, my, index)
-    crpix1 = source[0].header['CRPIX1']
-    crval1 = source[0].header['CRVAL1']
-    cdelt1 = source[0].header['CDELT1']
-    crpix2 = source[0].header['CRPIX2']
-    crval2 = source[0].header['CRVAL2']
-    cdelt2 = source[0].header['CDELT2']
+'''
+The class that encapsulates all bascmod calls
+'''
+
+class view():
+    def __init__(self):
+        self.mx = 0
+        self.my = 0
+        self.crpix1 = 0
+        self.crval1 = 0
+        self.cdelt1 = 0
+        self.crpix2 = 0
+        self.crval2 = 0
+        self.cdelt2 = 0
+        self.cindex= bascmod.new()
 
 
-def loadMap(filename):
-    loadFitsFile(filename, 0)
+    def loadFitsFile(self, filename, index):
+        source = fits.open(filename)
+        mx = source[0].header['NAXIS1']
+        my = source[0].header['NAXIS2']
+        mapdata = fitsraster(source[0].data, mx, my)
+        bascmod.map(self.cindex, mapdata , mx, my, index)
+        self.crpix1 = source[0].header['CRPIX1']
+        self.crval1 = source[0].header['CRVAL1']
+        self.cdelt1 = source[0].header['CDELT1']
+        self.crpix2 = source[0].header['CRPIX2']
+        self.crval2 = source[0].header['CRVAL2']
+        self.cdelt2 = source[0].header['CDELT2']
 
-def loadBeam(filename):
-    loadFitsFile(filename, 1)
 
-def loadPBCor(filename):
-    loadFitsFile(filename, 2)
+    def loadMap(self,filename):
+        self.loadFitsFile(filename, 0)
 
-def blankPBCor(mx, my):
-    bascmod.map(np.ones(shape=(mx*my)).tolist(),mx, my, 2)
+    def loadBeam(self,filename):
+        self.loadFitsFile(filename, 1)
 
-def map(index):
-    return mapraster(bascmod.getmap(index))
+    def loadPBCor(self,filename):
+        self.loadFitsFile(filename, 2)
 
-def run():
-    bascmod.run()
+    def blankPBCor(self,mx, my):
+        bascmod.map(self.cindex, np.ones(shape=(mx * my)).tolist(), mx, my, 2)
 
-def showall():
-    bascmod.show(0)
-    bascmod.show(1)
-    bascmod.show(2)
+    def map(self,index):
+        return mapraster(bascmod.getmap(self.cindex, index))
 
-def getChain():
-    x = bascmod.chain(0)
-    y = bascmod.chain(1)
-    f = bascmod.chain(2)
-    k = bascmod.chain(3)
-    result = Table([x, y, f, k], names = ('x', 'y', 'F', 'k'))
-    return result
+    def run(self):
+        bascmod.run(self.cindex)
 
-def getSlice(k):
-    result = getChain()
-    models = result.group_by('k')
-    mask = []
-    for index in range(1,len(models.groups.keys)):
-        n = models.groups.indices[index] - models.groups.indices[index-1]
-        if n==k:
-            mask += np.arange(models.groups.indices[index-1],models.groups.indices[index]).tolist()
-    # result = Table([x[mask],y[mask],f[mask],k[mask)]], names = ('x', 'y', 'F', 'k'))
-    return result[mask]
+    def showall(self):
+        bascmod.show(self.cindex,0)
+        bascmod.show(self.cindex,1)
+        bascmod.show(self.cindex,2)
+
+    def getChain(self):
+        x = bascmod.chain(self.cindex,0)
+        y = bascmod.chain(self.cindex,1)
+        f = bascmod.chain(self.cindex,2)
+        k = bascmod.chain(self.cindex,3)
+        result = Table([x, y, f, k], names=('x', 'y', 'F', 'k'))
+        return result
+
+    def getSlice(self,k):
+        result = self.getChain()
+        models = result.group_by('k')
+        mask = []
+        for index in range(1, len(models.groups.keys)):
+            n = models.groups.indices[index] - models.groups.indices[index - 1]
+            if n == k:
+                mask += np.arange(models.groups.indices[index - 1], models.groups.indices[index]).tolist()
+        # result = Table([x[mask],y[mask],f[mask],k[mask)]], names = ('x', 'y', 'F', 'k'))
+        return result[mask]
 
 
 if __name__ == "__main__":

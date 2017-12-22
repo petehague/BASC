@@ -1,0 +1,6 @@
+git pull 
+echo $PATH
+PATH=/usr/local/mysql/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/opt/X11/bin:/usr/local/mysql/bin:/Library/TeX/texbin
+make
+
+  Look in build folder to see name of the lib.macosx… folder, then add it to notebook

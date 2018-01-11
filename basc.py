@@ -120,14 +120,13 @@ class view():
 
 
 if __name__ == "__main__":
+    newView = view()
     print("Load Image")
-    loadMap("ex_image.fits")
-    #bascmod.show(0)
+    newView.loadMap("ex_image.fits")
     print("Load PSF")
-    loadBeam("ex_psf.fits")
-    #bascmod.show(1)
+    newView.loadBeam("ex_psf.fits")
     print("Load Primary Beam")
-    loadPBCor("ex_flux.fits")
-    #bascmod.show(2)
+    newView.loadPBCor("ex_flux.fits")
+    newView.showall()
     print("Run BASC")
-    bascmod.run()
+    newView.run()

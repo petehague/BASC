@@ -5,13 +5,17 @@ from astropy.table import Table
 
 basc.readConfig("config.txt")
 
-basc.loadMap("ex_image.fits")
-basc.loadBeam("ex_psf.fits")
-basc.loadPBCor("ex_flux.fits")
+# Generate a view objecct to work with
+newView = basc.view()
 
-basc.run()
+# Load in the fits files
+newView.loadMap("ex_image.fits")
+newView.loadBeam("ex_psf.fits")
+newView.loadPBCor("ex_flux.fits")
 
-result = basc.getChain()
+# Run the MCMC process
+newView.run()
+result = newView.getChain()
 
 # Add in any processing of results here
 

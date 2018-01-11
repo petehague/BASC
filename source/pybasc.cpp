@@ -300,7 +300,7 @@ static PyObject* bascmodule_chain(PyObject *self, PyObject *args) {
   if (colIndex==3) {
     vector <uint32_t> intPtr=UserCommon[cindex].modelIndex;
     for (uint32_t i=0;i<UserCommon[cindex].nmodels;i++) {
-      PyList_SetItem(returnList, i, PyInt_FromLong(intPtr[i]));
+      PyList_SetItem(returnList, i, PyLong_FromLong(intPtr[i]));
     }
     return returnList;
   }

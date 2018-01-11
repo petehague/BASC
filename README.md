@@ -7,16 +7,11 @@ It is based on a method developed by Steve Gull, and uses the BayeSys MCMC drive
 
 ### Usage ###
 
-Type make to compile the C++ portion (this will automatically compile the relevant parts of Bayesis as well) and then invoke the Python script with
+Type make to compile the library and BayeSys and then test the program script with
 
 basc.py <dirty map file> <dirty psf file> <primary beam flux file>
 
-The Python script requires astropy and numpy in order to function. In addition, there is a script use_pymc.py which for comparison applies the same likelihood model using PyMC (which doesn't have all the functionality of BayeSys unfortunately)
-
-### Python Module ###
-
-There is a python module, basc2.py, which is being developed alongside the command line utility. In the long term this will
-be the only way of using basc. It is still experimental at this time.
+In general, import basc into your Python program and use it as shown in example.py
 
 ### Contact ###
 

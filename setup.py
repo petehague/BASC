@@ -30,6 +30,9 @@ if "PYTHONPATH" in os.environ:
     newpypath += re.split("/",filelist[0])[-1]
     print("To set your python path: PYTHONPATH=$PYTHONPATH:"+newpypath+"\n")
   
-
-# copy(filelist[0]+"/bascmod.so", ".")
-# copy(filelist[0]+"/skimage.so", ".")
+libraries = glob.glob(filelist[0]+"/*.so")
+for lib in libraries:
+    newlib = re.split("/", lib)[-1]
+    newlib = newlib[0:7]+".so"
+    print(lib, newlib)
+    copy(lib,newlib)

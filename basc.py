@@ -4,7 +4,7 @@ import os
 import numpy as np
 import re
 
-sys.path.append(os.path.dirname(os.path.realpath(__file__))+"/build/lib.macosx-10.13-intel-2.7/")
+#sys.path.append(os.path.dirname(os.path.realpath(__file__))+"/build/lib.macosx-10.13-intel-2.7/")
 
 import bascmod
 from astropy.io import fits

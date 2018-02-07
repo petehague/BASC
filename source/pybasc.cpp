@@ -35,6 +35,7 @@ struct UserCommonStr {
   vector <double> F;
   vector <double> fmu;
   vector <double> fsig;
+  vector <double> lh;
   vector <uint32_t> modelIndex;
 };
 
@@ -98,6 +99,7 @@ int UserMonitor(CommonStr *Common, ObjectStr *Members) {
   for (uint32_t k=0;k<Common->ENSEMBLE;k++) {
     Cube = Members[k].Cubes;
     for (uint32_t i=0;i<Members[k].Natoms;i++) {
+      UC->lh.push_back(Members[k].Lhood);
       UC->x.push_back(Cube[i][0]*double(mapsize));
       UC->y.push_back(Cube[i][1]*double(mapsize));
       UC->F.push_back(fluxscale*(Cube[i][2]/(1.-Cube[i][2])));
@@ -304,6 +306,7 @@ static PyObject* bascmodule_chain(PyObject *self, PyObject *args) {
     }
     return returnList;
   }
+  if (colIndex==4) { colPtr=UserCommon[cindex].lh; }
 
   for (uint32_t i=0;i<UserCommon[cindex].nmodels;i++) {
     PyList_SetItem(returnList, i, PyFloat_FromDouble(colPtr[i]));

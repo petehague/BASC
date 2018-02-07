@@ -104,7 +104,8 @@ class view():
         y = bascmod.chain(self.cindex,1)
         f = bascmod.chain(self.cindex,2)
         k = bascmod.chain(self.cindex,3)
-        result = Table([x, y, f, k], names=('x', 'y', 'F', 'k'))
+        L = bascmod.chain(self.cindex,4)
+        result = Table([x, y, f, k, L], names=('x', 'y', 'F', 'k', 'L'))
         return result
 
     def getSlice(self,k):

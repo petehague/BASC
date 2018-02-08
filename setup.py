@@ -17,16 +17,16 @@ bascmodule = Extension('bascmod',
                                 'bayesys/bayesys3.c', 'bayesys/random.c',
                                 'bayesys/hilbert.c', 'bayesys/app.c',
                                 'source/options.cpp'],
-                       language='c++',
-                       extra_compile_args=['-std=c++11'])
+                       language='c++')
+                       #extra_compile_args=['-std=c++11'])
 
 setup(ext_modules=[bascmodule])
 
+filelist = glob.glob("build/lib*")
 if "PYTHONPATH" in os.environ:
     pypath = os.environ["PYTHONPATH"]
     newpypath = "/".join(re.split("/",os.path.realpath(__file__))[:-1])
     newpypath += "/build/"
-    filelist = glob.glob("build/lib*")
     newpypath += re.split("/",filelist[0])[-1]
     print("To set your python path: PYTHONPATH=$PYTHONPATH:"+newpypath+"\n")
   

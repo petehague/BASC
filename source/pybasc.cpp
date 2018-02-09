@@ -18,6 +18,7 @@ using namespace std;
 vector <skimage> dirtyMap;
 vector <skimage> dirtyBeam;
 vector <skimage> primaryBeam;
+vector <double> evidence;
 uint32_t mapsize, mapdepth, modelIndex, maxmodels;
 double sigma, fluxscale, freqscale;
 bool cubeSwitch = false;
@@ -278,14 +279,24 @@ static PyObject* bascmodule_run(PyObject *self, PyObject *args) {
   Members = new ObjectStr[Common.ENSEMBLE];
   code = BayeSys3(&Common,Members);
 
+  evidence[cindex] = Common.Evidence;
+
   chainfile.open("chain.txt", fstream::out);
-  for (auto i=0;i<UserCommon[cindex].x.size();i++) {
+  for (uint32_t i=0;i<UserCommon[cindex].x.size();i++) {
     chainfile << fixed << setprecision(9) << UserCommon[cindex].x[i] << " " << UserCommon[cindex].y[i] << " " << UserCommon[cindex].F[i] << " " << UserCommon[cindex].modelIndex[i];
     chainfile << endl;
   }
   chainfile.close();
 
   return PyLong_FromLong(code);
+}
+
+static PyObject* bascmodule_evid(PyObject *self, PyObject *args) {
+  uint32_t cindex;
+
+  if (!PyArg_ParseTuple(args,"i", &cindex)) { return NULL; }
+
+  return PyFloat_FromDouble(evidence[cindex]);
 }
 
 static PyObject* bascmodule_chain(PyObject *self, PyObject *args) {
@@ -339,6 +350,7 @@ static PyObject* bascmodule_new(PyObject *self, PyObject *args) {
   dirtyBeam.push_back(skimage());
   primaryBeam.push_back(skimage());
   UserCommon.push_back(UserCommonStr());
+  evidence.push_back(-1.0);
   return PyLong_FromLong(dirtyMap.size()-1);
 }
 
@@ -353,6 +365,7 @@ static PyMethodDef bascmethods[] = {
   {"init", bascmodule_init, METH_VARARGS, ""},
   {"option", bascmodule_setOption, METH_VARARGS, ""},
   {"new", bascmodule_new, METH_VARARGS, ""},
+  {"evidence", bascmodule_evid, METH_VARARGS, ""},
   {NULL, NULL, 0, NULL}
 };
 

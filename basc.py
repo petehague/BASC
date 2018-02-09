@@ -99,6 +99,9 @@ class view():
         bascmod.show(self.cindex,1)
         bascmod.show(self.cindex,2)
 
+    def getEvidence(self):
+        return bascmod.evidence(self.cindex)
+
     def getChain(self):
         x = bascmod.chain(self.cindex,0)
         y = bascmod.chain(self.cindex,1)

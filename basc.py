@@ -45,6 +45,57 @@ def mapraster(rawmap):
             result[x,y] = rawmap[y*mapsize + x]
     return result
 
+def mapprof(maparr, limits=[0,0]):
+    if limits==[0,0]:
+        maxval = np.max(maparr)
+        minval = np.min(maparr)
+    else:
+        minval = limits[0]
+        maxval = limits[1]
+    fbins = np.zeros(100)
+    for f in np.ndarray.flatten(maparr):
+        index = int(np.floor(100*((f-minval)/(maxval-minval))))
+        if index>=0 and index<100:
+            fbins[index]+=1
+    return np.linspace(minval, maxval, num=100),fbins
+
+def arrshift(maparr):
+    mx,my = maparr.shape
+    newmap = np.zeros(maparr.shape)
+    for y in range(my):
+        for x in range(mx):
+            newmap[x,y] = maparr[int((x+mx/2)%mx),int((y+my/2)%my)]
+    return newmap
+
+def logimage(maparr):
+    minval = np.min(maparr)-1e-6
+    maparr -= minval
+    return np.log10(maparr)
+
+def cutin(maparr):
+    nx,ny = maparr.shape
+    nx = int(nx*2)
+    ny = int(ny*2)
+    offx = int(nx/4)
+    offy = int(ny/4)
+    result = np.zeros(shape=(nx,ny))
+    for y in range(int(ny/2)):
+        for x in range(int(nx/2)):
+            result[x+offx,y+offy] = maparr[x,y]
+    return result
+
+def cutout(maparr):
+    nx,ny = maparr.shape
+    nx = int(nx/2)
+    ny = int(ny/2)
+    offx = int(nx/2)
+    offy = int(ny/2)
+    result = np.zeros(shape=(nx,ny))
+    for y in range(ny):
+        for x in range(nx):
+            result[x,y] = maparr[x+offx,y+offy]
+    return result
+
 '''
 The class that encapsulates all bascmod calls
 '''
@@ -60,6 +111,7 @@ class view():
         self.crval2 = 0
         self.cdelt2 = 0
         self.cindex= bascmod.new()
+        self.resid = []
 
 
     def loadFitsFile(self, filename, index):
@@ -88,11 +140,14 @@ class view():
     def blankPBCor(self,mx, my):
         bascmod.map(self.cindex, np.ones(shape=(mx * my)).tolist(), mx, my, 2)
 
+    def setNoise(self, noise):
+        bascmod.noise(self.cindex, noise)
+
     def map(self,index):
         return mapraster(bascmod.getmap(self.cindex, index))
 
     def run(self):
-        bascmod.run(self.cindex)
+        return bascmod.run(self.cindex)
 
     def showall(self):
         bascmod.show(self.cindex,0)
@@ -121,6 +176,31 @@ class view():
                 mask += np.arange(models.groups.indices[index - 1], models.groups.indices[index]).tolist()
         # result = Table([x[mask],y[mask],f[mask],k[mask)]], names = ('x', 'y', 'F', 'k'))
         return result[mask]
+
+    def getrms(self):
+        dmap = mapraster(bascmod.getmap(self.cindex, 0)) #Try implementing some caching
+        dbeam = mapraster(bascmod.getmap(self.cindex, 1))
+        result = self.getChain()
+
+        offsetx, offsety = dbeam.shape
+        xygrid = np.zeros(shape=dmap.shape)
+        for line in result:
+            x = int(np.floor(line['x']))
+            y = int(np.floor(line['y']))
+            xygrid[x,y] += line['F']/len(result)
+
+        ftbeam = np.fft.fft2(arrshift(dbeam))
+        ftpoints = np.fft.fft2(arrshift(cutin(xygrid)))
+        convmap = ftbeam*ftpoints
+
+        propmap = arrshift(np.fft.ifft2(convmap).real)
+        propmap = np.rot90(np.fliplr(propmap)) 
+        norm = np.max(dmap)/np.max(propmap)
+
+        self.resid = dmap-cutout(propmap*norm)
+        rms = np.std(self.resid)
+
+        return rms
 
 
 if __name__ == "__main__":

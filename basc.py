@@ -112,14 +112,23 @@ class view():
         self.cdelt2 = 0
         self.cindex= bascmod.new()
         self.resid = []
+        self.dmap = []
+        self.dbeam = []
+        self.pbcor = []
 
 
     def loadFitsFile(self, filename, index):
         source = fits.open(filename)
-        mx = source[0].header['NAXIS1']
-        my = source[0].header['NAXIS2']
-        mapdata = fitsraster(source[0].data, mx, my)
-        bascmod.map(self.cindex, mapdata , mx, my, index)
+        self.mx = source[0].header['NAXIS1']
+        self.my = source[0].header['NAXIS2']
+        if index==0:
+            self.dmap = source[0].data[0,0]
+        if index==1:
+            self.dbeam = source[0].data[0,0]
+        if index==2:
+            self.pbcor = source[0].data[0,0]
+        mapdata = fitsraster(source[0].data, self.mx, self.my)
+        bascmod.map(self.cindex, mapdata , self.mx, self.my, index)
         self.crpix1 = source[0].header['CRPIX1']
         self.crval1 = source[0].header['CRVAL1']
         self.cdelt1 = source[0].header['CDELT1']
@@ -178,31 +187,36 @@ class view():
         return result[mask]
 
     def getRMS(self):
-        dmap = mapraster(bascmod.getmap(self.cindex, 0)) #Try implementing some caching
-        dbeam = mapraster(bascmod.getmap(self.cindex, 1))
         result = self.getChain()
 
-        offsetx, offsety = dbeam.shape
-        xygrid = np.zeros(shape=dmap.shape)
+        xygrid = np.zeros(shape=self.dbeam.shape)
         oldk = -1
         nmodels = 0
+        offx, offy = self.dbeam.shape
+        ncells = offx*offy
+        offx = int(offx/4)
+        offy = int(offy/4)
         for line in result:
-            x = int(np.floor(line['x']))
-            y = int(np.floor(line['y']))
+            x = int(np.floor(line['x']))+offx
+            y = int(np.floor(line['y']))+offy
             xygrid[x,y] += line['F']
             if line['k']!=oldk:
                 nmodels += 1
             oldk = line['k']
         xygrid /= nmodels
+        xygrid /= ncells
+        xygrid = np.rot90(xygrid)
+        xygrid = np.fliplr(xygrid)
 
-        ftbeam = np.fft.fft2(arrshift(dbeam))
-        ftpoints = np.fft.fft2(arrshift(cutin(xygrid)))
+        ftbeam = np.fft.fft2(arrshift(self.dbeam))
+        ftpoints = np.fft.fft2(xygrid)
         convmap = ftbeam*ftpoints
+        propmap = np.fft.fft2(convmap).real
 
-        propmap = arrshift(np.fft.ifft2(convmap).real)
-        propmap = np.rot90(np.fliplr(propmap)) 
+        print(np.max(self.dmap))
+        print(np.max(propmap))
 
-        self.resid = dmap-cutout(propmap)
+        self.resid = cutout(self.dmap)-cutout(propmap)
         rms = np.std(self.resid)
 
         return rms

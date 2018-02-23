@@ -279,6 +279,7 @@ static PyObject* bascmodule_run(PyObject *self, PyObject *args) {
 
   if (UserCommon[cindex].noise>0) {
      dirtyMap[cindex].setnoise(UserCommon[cindex].noise);
+     fluxscale = UserCommon[cindex].noise;
   }
 
   cout << "Using noise level " << dirtyMap[cindex].getnoise() << endl;

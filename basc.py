@@ -177,17 +177,23 @@ class view():
         # result = Table([x[mask],y[mask],f[mask],k[mask)]], names = ('x', 'y', 'F', 'k'))
         return result[mask]
 
-    def getrms(self):
+    def getRMS(self):
         dmap = mapraster(bascmod.getmap(self.cindex, 0)) #Try implementing some caching
         dbeam = mapraster(bascmod.getmap(self.cindex, 1))
         result = self.getChain()
 
         offsetx, offsety = dbeam.shape
         xygrid = np.zeros(shape=dmap.shape)
+        oldk = -1
+        nmodels = 0
         for line in result:
             x = int(np.floor(line['x']))
             y = int(np.floor(line['y']))
-            xygrid[x,y] += line['F']/len(result)
+            xygrid[x,y] += line['F']
+            if line['k']!=oldk:
+                nmodels += 1
+            oldk = line['k']
+        xygrid /= nmodels
 
         ftbeam = np.fft.fft2(arrshift(dbeam))
         ftpoints = np.fft.fft2(arrshift(cutin(xygrid)))
@@ -195,13 +201,14 @@ class view():
 
         propmap = arrshift(np.fft.ifft2(convmap).real)
         propmap = np.rot90(np.fliplr(propmap)) 
-        norm = np.max(dmap)/np.max(propmap)
 
-        self.resid = dmap-cutout(propmap*norm)
+        self.resid = dmap-cutout(propmap)
         rms = np.std(self.resid)
 
         return rms
 
+    def getResid(self):
+        return self.resid
 
 if __name__ == "__main__":
     newView = view()

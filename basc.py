@@ -213,9 +213,6 @@ class view():
         convmap = ftbeam*ftpoints
         propmap = np.fft.fft2(convmap).real
 
-        print(np.max(self.dmap))
-        print(np.max(propmap))
-
         self.resid = cutout(self.dmap)-cutout(propmap)
         rms = np.std(self.resid)
 

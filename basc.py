@@ -45,6 +45,57 @@ def mapraster(rawmap):
             result[x,y] = rawmap[y*mapsize + x]
     return result
 
+def mapprof(maparr, limits=[0,0]):
+    if limits==[0,0]:
+        maxval = np.max(maparr)
+        minval = np.min(maparr)
+    else:
+        minval = limits[0]
+        maxval = limits[1]
+    fbins = np.zeros(100)
+    for f in np.ndarray.flatten(maparr):
+        index = int(np.floor(100*((f-minval)/(maxval-minval))))
+        if index>=0 and index<100:
+            fbins[index]+=1
+    return np.linspace(minval, maxval, num=100),fbins
+
+def arrshift(maparr):
+    mx,my = maparr.shape
+    newmap = np.zeros(maparr.shape)
+    for y in range(my):
+        for x in range(mx):
+            newmap[x,y] = maparr[int((x+mx/2)%mx),int((y+my/2)%my)]
+    return newmap
+
+def logimage(maparr):
+    minval = np.min(maparr)-1e-6
+    maparr -= minval
+    return np.log10(maparr)
+
+def cutin(maparr):
+    nx,ny = maparr.shape
+    nx = int(nx*2)
+    ny = int(ny*2)
+    offx = int(nx/4)
+    offy = int(ny/4)
+    result = np.zeros(shape=(nx,ny))
+    for y in range(int(ny/2)):
+        for x in range(int(nx/2)):
+            result[x+offx,y+offy] = maparr[x,y]
+    return result
+
+def cutout(maparr):
+    nx,ny = maparr.shape
+    nx = int(nx/2)
+    ny = int(ny/2)
+    offx = int(nx/2)
+    offy = int(ny/2)
+    result = np.zeros(shape=(nx,ny))
+    for y in range(ny):
+        for x in range(nx):
+            result[x,y] = maparr[x+offx,y+offy]
+    return result
+
 '''
 The class that encapsulates all bascmod calls
 '''
@@ -60,14 +111,24 @@ class view():
         self.crval2 = 0
         self.cdelt2 = 0
         self.cindex= bascmod.new()
+        self.resid = []
+        self.dmap = []
+        self.dbeam = []
+        self.pbcor = []
 
 
     def loadFitsFile(self, filename, index):
         source = fits.open(filename)
-        mx = source[0].header['NAXIS1']
-        my = source[0].header['NAXIS2']
-        mapdata = fitsraster(source[0].data, mx, my)
-        bascmod.map(self.cindex, mapdata , mx, my, index)
+        self.mx = source[0].header['NAXIS1']
+        self.my = source[0].header['NAXIS2']
+        if index==0:
+            self.dmap = source[0].data[0,0]
+        if index==1:
+            self.dbeam = source[0].data[0,0]
+        if index==2:
+            self.pbcor = source[0].data[0,0]
+        mapdata = fitsraster(source[0].data, self.mx, self.my)
+        bascmod.map(self.cindex, mapdata , self.mx, self.my, index)
         self.crpix1 = source[0].header['CRPIX1']
         self.crval1 = source[0].header['CRVAL1']
         self.cdelt1 = source[0].header['CDELT1']
@@ -88,23 +149,30 @@ class view():
     def blankPBCor(self,mx, my):
         bascmod.map(self.cindex, np.ones(shape=(mx * my)).tolist(), mx, my, 2)
 
+    def setNoise(self, noise):
+        bascmod.noise(self.cindex, noise)
+
     def map(self,index):
         return mapraster(bascmod.getmap(self.cindex, index))
 
     def run(self):
-        bascmod.run(self.cindex)
+        return bascmod.run(self.cindex)
 
     def showall(self):
         bascmod.show(self.cindex,0)
         bascmod.show(self.cindex,1)
         bascmod.show(self.cindex,2)
 
+    def getEvidence(self):
+        return bascmod.evidence(self.cindex)
+
     def getChain(self):
         x = bascmod.chain(self.cindex,0)
         y = bascmod.chain(self.cindex,1)
         f = bascmod.chain(self.cindex,2)
         k = bascmod.chain(self.cindex,3)
-        result = Table([x, y, f, k], names=('x', 'y', 'F', 'k'))
+        L = bascmod.chain(self.cindex,4)
+        result = Table([x, y, f, k, L], names=('x', 'y', 'F', 'k', 'L'))
         return result
 
     def getSlice(self,k):
@@ -118,6 +186,40 @@ class view():
         # result = Table([x[mask],y[mask],f[mask],k[mask)]], names = ('x', 'y', 'F', 'k'))
         return result[mask]
 
+    def getRMS(self):
+        result = self.getChain()
+
+        xygrid = np.zeros(shape=self.dbeam.shape)
+        oldk = -1
+        nmodels = 0
+        offx, offy = self.dbeam.shape
+        ncells = offx*offy
+        offx = int(offx/4)
+        offy = int(offy/4)
+        for line in result:
+            x = int(np.floor(line['x']))+offx
+            y = int(np.floor(line['y']))+offy
+            xygrid[x,y] += line['F']
+            if line['k']!=oldk:
+                nmodels += 1
+            oldk = line['k']
+        xygrid /= nmodels
+        xygrid /= ncells
+        xygrid = np.rot90(xygrid)
+        xygrid = np.fliplr(xygrid)
+
+        ftbeam = np.fft.fft2(arrshift(self.dbeam))
+        ftpoints = np.fft.fft2(xygrid)
+        convmap = ftbeam*ftpoints
+        propmap = np.fft.fft2(convmap).real
+
+        self.resid = cutout(self.dmap)-cutout(propmap)
+        rms = np.std(self.resid)
+
+        return rms
+
+    def getResid(self):
+        return self.resid
 
 if __name__ == "__main__":
     newView = view()

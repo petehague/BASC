@@ -18,6 +18,7 @@ using namespace std;
 vector <skimage> dirtyMap;
 vector <skimage> dirtyBeam;
 vector <skimage> primaryBeam;
+vector <double> evidence;
 uint32_t mapsize, mapdepth, modelIndex, maxmodels;
 double sigma, fluxscale, freqscale;
 bool cubeSwitch = false;
@@ -28,6 +29,7 @@ struct UserCommonStr {
   uint32_t maxmodels;
   uint32_t burnin;
   uint32_t mapindex;
+  double noise;
   double cool;
   vector <uint16_t> natoms;
   vector <double> x;
@@ -35,6 +37,7 @@ struct UserCommonStr {
   vector <double> F;
   vector <double> fmu;
   vector <double> fsig;
+  vector <double> lh;
   vector <uint32_t> modelIndex;
 };
 
@@ -79,7 +82,7 @@ int UserBuild(double *like, CommonStr *Common, ObjectStr* Member, int natoms, in
 int UserMonitor(CommonStr *Common, ObjectStr *Members) {
   double **Cube;// = Members->Cubes;
   UserCommonStr *UC = (UserCommonStr *)Common->UserCommon;
-
+  
   if (Common->cool > 1.) Common->cool = 1.;
   if (Common->cool < 1.) {
     UC->burnin += 1;
@@ -90,6 +93,8 @@ int UserMonitor(CommonStr *Common, ObjectStr *Members) {
     return 0;
   }
 
+  if (UC->maxmodels>UC->burnin) { UC->maxmodels = UC->burnin+1; }
+
   UC->natoms.push_back(Members[0].Natoms);
   if (UC->nmodels == 0) {
     cout << "Burn in complete" << endl;
@@ -98,6 +103,7 @@ int UserMonitor(CommonStr *Common, ObjectStr *Members) {
   for (uint32_t k=0;k<Common->ENSEMBLE;k++) {
     Cube = Members[k].Cubes;
     for (uint32_t i=0;i<Members[k].Natoms;i++) {
+      UC->lh.push_back(Members[k].Lhood);
       UC->x.push_back(Cube[i][0]*double(mapsize));
       UC->y.push_back(Cube[i][1]*double(mapsize));
       UC->F.push_back(fluxscale*(Cube[i][2]/(1.-Cube[i][2])));
@@ -111,6 +117,7 @@ int UserMonitor(CommonStr *Common, ObjectStr *Members) {
   }
 
   if (UC->nmodels>UC->maxmodels) {
+    cout << "Chain complete with " << UC->nmodels << " models" << endl;
     return 1;
   } else {
     return 0;
@@ -242,15 +249,26 @@ static PyObject* bascmodule_setOption(PyObject *self, PyObject *args) {
   if (strcmp(key,"Iseed")==0) { Common.Iseed = atoi(value); }
   if (strcmp(key,"Ensemble")==0) { Common.ENSEMBLE = atoi(value); }
   if (strcmp(key,"Method")==0) { Common.Method = atoi(value); }
-  if (strcmp(key,"Rate")==0) { Common.Rate = atoi(value); }
+  if (strcmp(key,"Rate")==0) { Common.Rate = atof(value); }
   if (strcmp(key,"maxmodels")==0) { maxmodels = atoi(value); }
+
+  return PyLong_FromLong(1);
+}
+
+static PyObject* bascmodule_setNoise(PyObject *self, PyObject *args) {
+  uint32_t index;
+  double newnoise;
+
+  if (!PyArg_ParseTuple(args,"id", &index, &newnoise)) { return NULL; }
+
+  UserCommon[index].noise = newnoise;
 
   return PyLong_FromLong(1);
 }
 
 
 static PyObject* bascmodule_run(PyObject *self, PyObject *args) {
-  uint32_t code, cindex;
+  int32_t code, cindex;
   ObjectStr *Members;
   fstream chainfile;
 
@@ -259,12 +277,20 @@ static PyObject* bascmodule_run(PyObject *self, PyObject *args) {
   fluxscale = dirtyMap[cindex].noise(primaryBeam.at(cindex));
   dirtyMap[cindex].setnoise(fluxscale);
 
+  if (UserCommon[cindex].noise>0) {
+     dirtyMap[cindex].setnoise(UserCommon[cindex].noise);
+     fluxscale = UserCommon[cindex].noise;
+  }
+
+  cout << "Using noise level " << dirtyMap[cindex].getnoise() << endl;
+
   if (mapdepth>1) {
     Common.Ndim = 5;
   } else {
     Common.Ndim = 3;
   }
 
+  Common.cool = 0;
 
   UserCommon[cindex].nmodels = 0;
   UserCommon[cindex].burnin = 0;
@@ -276,14 +302,24 @@ static PyObject* bascmodule_run(PyObject *self, PyObject *args) {
   Members = new ObjectStr[Common.ENSEMBLE];
   code = BayeSys3(&Common,Members);
 
+  evidence[cindex] = Common.Evidence;
+
   chainfile.open("chain.txt", fstream::out);
-  for (auto i=0;i<UserCommon[cindex].x.size();i++) {
+  for (uint32_t i=0;i<UserCommon[cindex].x.size();i++) {
     chainfile << fixed << setprecision(9) << UserCommon[cindex].x[i] << " " << UserCommon[cindex].y[i] << " " << UserCommon[cindex].F[i] << " " << UserCommon[cindex].modelIndex[i];
     chainfile << endl;
   }
   chainfile.close();
 
   return PyLong_FromLong(code);
+}
+
+static PyObject* bascmodule_evid(PyObject *self, PyObject *args) {
+  uint32_t cindex;
+
+  if (!PyArg_ParseTuple(args,"i", &cindex)) { return NULL; }
+
+  return PyFloat_FromDouble(evidence[cindex]);
 }
 
 static PyObject* bascmodule_chain(PyObject *self, PyObject *args) {
@@ -304,6 +340,7 @@ static PyObject* bascmodule_chain(PyObject *self, PyObject *args) {
     }
     return returnList;
   }
+  if (colIndex==4) { colPtr=UserCommon[cindex].lh; }
 
   for (uint32_t i=0;i<UserCommon[cindex].nmodels;i++) {
     PyList_SetItem(returnList, i, PyFloat_FromDouble(colPtr[i]));
@@ -336,6 +373,8 @@ static PyObject* bascmodule_new(PyObject *self, PyObject *args) {
   dirtyBeam.push_back(skimage());
   primaryBeam.push_back(skimage());
   UserCommon.push_back(UserCommonStr());
+  UserCommon.back().noise = -1;
+  evidence.push_back(-1.0);
   return PyLong_FromLong(dirtyMap.size()-1);
 }
 
@@ -349,7 +388,9 @@ static PyMethodDef bascmethods[] = {
   {"show", bascmodule_show, METH_VARARGS, ""},
   {"init", bascmodule_init, METH_VARARGS, ""},
   {"option", bascmodule_setOption, METH_VARARGS, ""},
+  {"noise", bascmodule_setNoise, METH_VARARGS, ""},
   {"new", bascmodule_new, METH_VARARGS, ""},
+  {"evidence", bascmodule_evid, METH_VARARGS, ""},
   {NULL, NULL, 0, NULL}
 };
 

@@ -20,7 +20,7 @@ vector <skimage> dirtyBeam;
 vector <skimage> primaryBeam;
 vector <double> evidence;
 uint32_t mapsize, mapdepth, modelIndex, maxmodels;
-double sigma, fluxscale, freqscale;
+double sigma, freqscale;
 bool cubeSwitch = false;
 optDict options;
 
@@ -30,6 +30,7 @@ struct UserCommonStr {
   uint32_t burnin;
   uint32_t mapindex;
   double noise;
+  double fluxscale;
   double cool;
   vector <uint16_t> natoms;
   vector <double> x;
@@ -44,6 +45,10 @@ struct UserCommonStr {
 vector <UserCommonStr> UserCommon;
 CommonStr Common;
 
+vector <double> fx;
+vector <double> fF;
+vector <double> fL;
+
 extern "C" {
 int UserBuild(double *like, CommonStr *Common, ObjectStr* Member, int natoms, int dummy) {
   vector <twov> points;
@@ -52,10 +57,13 @@ int UserBuild(double *like, CommonStr *Common, ObjectStr* Member, int natoms, in
   vector <double> fsig;
   double **Cube = Member->Cubes;
   UserCommonStr *UC = (UserCommonStr *)Common->UserCommon;
+  double fluxscale = UC->fluxscale;
 
   if (natoms==0) {
     *like = -1e6;
     return 0;
+    //*like = 100;
+    //return 1;
   }
 
   for (uint32_t i=0;i<natoms;i++) {
@@ -63,6 +71,8 @@ int UserBuild(double *like, CommonStr *Common, ObjectStr* Member, int natoms, in
     double y = Cube[i][1]*double(mapsize);
     points.push_back(twov(x,y));
     flux.push_back(fluxscale*Cube[i][2]/(1.-Cube[i][2]));
+    //fx.push_back(Cube[i][2]);
+    //fF.push_back(flux.back());
     if (cubeSwitch) {
       fmu.push_back(Cube[i][3]*freqscale);
       fsig.push_back(Cube[i][4]*freqscale);
@@ -75,6 +85,11 @@ int UserBuild(double *like, CommonStr *Common, ObjectStr* Member, int natoms, in
   }
 
   *like = dirtyMap[UC->mapindex].deconv(dirtyBeam[UC->mapindex],primaryBeam[UC->mapindex],&points[0],&flux[0],flux.size());
+  //*like = dirtyMap[UC->mapindex].deconv(dirtyBeam[UC->mapindex],&points[0],&flux[0],flux.size());
+
+  /*for (uint32_t i=0;i<natoms;i++) {
+    fL.push_back(*like);
+  }*/
 
   return 1;
 }
@@ -82,7 +97,8 @@ int UserBuild(double *like, CommonStr *Common, ObjectStr* Member, int natoms, in
 int UserMonitor(CommonStr *Common, ObjectStr *Members) {
   double **Cube;// = Members->Cubes;
   UserCommonStr *UC = (UserCommonStr *)Common->UserCommon;
-  
+  double fluxscale = UC->fluxscale;
+
   if (Common->cool > 1.) Common->cool = 1.;
   if (Common->cool < 1.) {
     UC->burnin += 1;
@@ -266,23 +282,43 @@ static PyObject* bascmodule_setNoise(PyObject *self, PyObject *args) {
   return PyLong_FromLong(1);
 }
 
+static PyObject* bascmodule_setFlux(PyObject *self, PyObject *args) {
+  uint32_t index;
+  double newflux;
+
+  if (!PyArg_ParseTuple(args,"id", &index, &newflux)) { return NULL; }
+
+  UserCommon[index].fluxscale = newflux;
+
+  return PyLong_FromLong(1);
+}
 
 static PyObject* bascmodule_run(PyObject *self, PyObject *args) {
   int32_t code, cindex;
   ObjectStr *Members;
   fstream chainfile;
+  double noiseflux;
 
   if (!PyArg_ParseTuple(args,"i", &cindex)) { return NULL; }
 
-  fluxscale = dirtyMap[cindex].noise(primaryBeam.at(cindex));
-  dirtyMap[cindex].setnoise(fluxscale);
+  noiseflux = dirtyMap[cindex].noise(primaryBeam.at(cindex));
+  dirtyMap[cindex].setnoise(noiseflux);
 
   if (UserCommon[cindex].noise>0) {
      dirtyMap[cindex].setnoise(UserCommon[cindex].noise);
-     fluxscale = UserCommon[cindex].noise;
+     noiseflux = UserCommon[cindex].noise;
   }
+  if (UserCommon[cindex].fluxscale==0) {
+     UserCommon[cindex].fluxscale = noiseflux;
+     cout << "Defaulting to flux scaled to noise." << endl;
+  } 
+
+  cout << "PSF min/max " << dirtyBeam[cindex].min() << "," << dirtyBeam[cindex].max() << endl;
 
   cout << "Using noise level " << dirtyMap[cindex].getnoise() << endl;
+  cout << "Flux prior centre " << UserCommon[cindex].fluxscale << endl;
+
+  cout << "Dirty map maximum " << dirtyMap[cindex].max() << endl;
 
   if (mapdepth>1) {
     Common.Ndim = 5;
@@ -303,6 +339,13 @@ static PyObject* bascmodule_run(PyObject *self, PyObject *args) {
   code = BayeSys3(&Common,Members);
 
   evidence[cindex] = Common.Evidence;
+
+  /*chainfile.open("fluxtrack.txt", fstream::out);
+  chainfile << "x F L\n";
+  for (uint32_t i=0;i<fx.size();i++) {
+    chainfile << fx[i] << " " << fF[i] << " " << fL[i] << endl;
+  }
+  chainfile.close();*/
 
   chainfile.open("chain.txt", fstream::out);
   for (uint32_t i=0;i<UserCommon[cindex].x.size();i++) {
@@ -374,6 +417,7 @@ static PyObject* bascmodule_new(PyObject *self, PyObject *args) {
   primaryBeam.push_back(skimage());
   UserCommon.push_back(UserCommonStr());
   UserCommon.back().noise = -1;
+  UserCommon.back().fluxscale = 0;
   evidence.push_back(-1.0);
   return PyLong_FromLong(dirtyMap.size()-1);
 }
@@ -389,6 +433,7 @@ static PyMethodDef bascmethods[] = {
   {"init", bascmodule_init, METH_VARARGS, ""},
   {"option", bascmodule_setOption, METH_VARARGS, ""},
   {"noise", bascmodule_setNoise, METH_VARARGS, ""},
+  {"flux", bascmodule_setFlux, METH_VARARGS, ""},
   {"new", bascmodule_new, METH_VARARGS, ""},
   {"evidence", bascmodule_evid, METH_VARARGS, ""},
   {NULL, NULL, 0, NULL}
@@ -441,6 +486,7 @@ int main() {
   UserCommon[0].maxmodels =  options.getint("maxmodels");
   UserCommon[0].burnin = 0;
   UserCommon[0].cool = 0;
+  UserCommon[0].fluxscale = 0.0025;
 
   Members = new ObjectStr[Common.ENSEMBLE];
 

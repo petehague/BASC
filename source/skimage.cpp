@@ -329,6 +329,29 @@ double skimage::deconv(skimage &other, twov *points, double *flux, uint64_t n) {
   return result * 0.5/(noiseLevel*noiseLevel);
 }
 
+//Evalutator including primary beam
+double skimage::deconv(skimage &other, skimage &pbeam, twov *points, double *flux, uint64_t n) {
+  double result = 0;
+  double ourflux[n];
+  uint32_t cx = other.getxsize()*0.5;
+  uint32_t cy = other.getysize()*0.5;
+
+  for (uint64_t i=0;i<n;i++) {
+    ourflux[i] = flux[i]*pbeam.get(points[i].x,points[i].y,0);
+  }
+
+  for (uint64_t i=0;i<n;i++) {
+    result += 2*ourflux[i]*buffer[coords(points[i].x, points[i].y,0)];
+    for (uint64_t j=0;j<n;j++) {
+      uint32_t u = cx + (points[j].x-points[i].x);
+      uint32_t v = cy + (points[j].y-points[i].y);
+      result -= ourflux[i]*ourflux[j]*other.get(u,v,0);
+    }
+  }
+
+  return result * 0.5/(noiseLevel*noiseLevel);
+}
+
 //Evalutator using frequency information and primary beam
 double skimage::deconv(skimage &other, skimage &pbeam, twov *points, double *flux, double *fmu, double *fsig, uint64_t n) {
   double result = 0;
@@ -347,30 +370,6 @@ double skimage::deconv(skimage &other, skimage &pbeam, twov *points, double *flu
         uint32_t v = cy + points[j].y-points[i].y;
         result -= fi*fj*other.get(u,v,k);
       }
-    }
-  }
-
-  return result * 0.5/(noiseLevel*noiseLevel);
-}
-
-
-//Evalutator including primary beam
-double skimage::deconv(skimage &other, skimage &pbeam, twov *points, double *flux, uint64_t n) {
-  double result = 0;
-  double ourflux[n];
-
-  for (uint64_t i=0;i<n;i++) {
-    ourflux[i] = flux[i]*pbeam.get(points[i].x,points[i].y,0);
-  }
-
-  uint32_t cx = other.getxsize()*0.5;
-  uint32_t cy = other.getysize()*0.5;
-  for (uint64_t i=0;i<n;i++) {
-    result += 2*ourflux[i]*buffer[coords(points[i].x, points[i].y,0)];
-    for (uint64_t j=0;j<n;j++) {
-      uint32_t u = cx + points[j].x-points[i].x;
-      uint32_t v = cy + points[j].y-points[i].y;
-      result -= ourflux[i]*ourflux[j]*other.get(u,v,0);
     }
   }
 

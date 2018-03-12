@@ -152,6 +152,9 @@ class view():
     def setNoise(self, noise):
         bascmod.noise(self.cindex, noise)
 
+    def setFlux(self, flux):
+        bascmod.flux(self.cindex, flux)
+
     def map(self,index):
         return mapraster(bascmod.getmap(self.cindex, index))
 

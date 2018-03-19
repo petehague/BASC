@@ -197,11 +197,11 @@ class view():
         nmodels = 0
         offx, offy = self.dbeam.shape
         ncells = offx*offy
-        offx = int(offx/4)
-        offy = int(offy/4)
+        offx = int(offx/4)-1
+        offy = int(offy/4)-1
         for line in result:
-            x = int(np.floor(line['x']))+offx
-            y = int(np.floor(line['y']))+offy
+            x = int(line['x'])+offx
+            y = int(line['y'])+offy
             xygrid[x,y] += line['F']
             if line['k']!=oldk:
                 nmodels += 1

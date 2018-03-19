@@ -26,6 +26,9 @@ class skimage {
   uint32_t coords(uint32_t x, uint32_t y, uint32_t f) {
     return f+(x*f_size)+(y*fxs);
   }
+  uint32_t coords(uint32_t x, uint32_t y) {
+    return x + y*x_size;
+  }
   bool started;
   double noiseLevel;
 
@@ -57,7 +60,7 @@ public:
   void pad(uint32_t dx, uint32_t dy, double contents);
   double deconv(skimage &other, twov *points, double *flux, uint64_t n);
   double deconv(skimage &other, skimage &pbeam, twov *points, double *flux, double *fmu, double *fsig, uint64_t n);
-  double deconv(skimage &other, skimage &pbeam, twov *points, double *flux, uint64_t n);
+  double deconv(skimage &other, skimage &pbeam, uint32_t *ax, uint32_t *ay, double *flux, uint64_t n);
   void subbeam(skimage &other, twov points, double flux);
   void subtract(twov points, double flux);
   void add(twov points, double flux);

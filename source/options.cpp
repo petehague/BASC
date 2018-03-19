@@ -77,21 +77,21 @@ void optDict::readCL (int argc, char **argv){
   May add a check in later if this becomes a problem
 */
 int32_t optDict::getint(string key) {
-    int index = 0;
+    uint32_t index = 0;
     while (key.compare(name[index])!=0 && index<data.size()) index++;
     if (index==data.size()) return 0;
     return *(int32_t *)data[index];
 }
 
 double optDict::getdouble(string key) {
-    int index = 0;
+    uint32_t index = 0;
     while (key.compare(name[index])!=0 && index<data.size()) index++;
     if (index==data.size()) return 0;
     return *(double *)data[index];
 }
 
 string optDict::getstring(string key) {
-    int index = 0;
+    uint32_t index = 0;
     while (key.compare(name[index])!=0 && index<data.size()) index++;
     if (index==data.size()) return "";
     return *(string *)data[index];

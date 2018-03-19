@@ -216,13 +216,13 @@ int UserBuild(double *like, CommonStr *Common, ObjectStr* Member, int natoms, in
     return 1;
   }
 
-  *like = dirtyMap.deconv(dirtyBeam,primaryBeam,&points[0],&flux[0],flux.size());
+  //*like = dirtyMap.deconv(dirtyBeam,primaryBeam,&points[0],&flux[0],flux.size());
 
   if (altSwitch) {
     *like = *like + altMap.deconv(altBeam,&points[0],&flux[0],flux.size());
   }
 
-  //*like = dirtyMap.deconv(dirtyBeam,&points[0],&flux[0],flux.size());
+  *like = dirtyMap.deconv(dirtyBeam,&points[0],&flux[0],flux.size());
   return 1;
 }
 

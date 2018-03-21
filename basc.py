@@ -3,12 +3,10 @@ import sys
 import os
 import numpy as np
 import re
-
-#sys.path.append(os.path.dirname(os.path.realpath(__file__))+"/build/lib.macosx-10.13-intel-2.7/")
-
 import bascmod
 from astropy.io import fits
 from astropy.table import Table
+import clustering
 
 bascmod.init()
 
@@ -223,6 +221,28 @@ class view():
 
     def getResid(self):
         return self.resid
+
+    def clusters(self, min_samples=10, eps=2):
+        result = self.getChain()
+        lastk = -1
+        maxk = 0
+        curk = 0
+        for line in result:
+            if line['k']==lastk:
+                curk += 1
+            else:
+                if curk>maxk:
+                    maxk = curk
+                curk = 0
+            lask = line['k']
+        xydata = np.zeros(shape=(len(result),2))
+        xydata[:,0]=result['x'].data
+        xydata[:,1]=result['y'].data
+        fluxdata = result['F'].data
+        atom, xy, flux, noise, labels, centers, widths = clustering.find_center(xydata, fluxdata, maxk, min_samples, eps)
+        clout = Table([centers[:,0],centers[:,1],widths[:,0],widths[:,1]],names=("x", "y", "dx", "dy"))
+        return clout,len(noise)
+        
 
 if __name__ == "__main__":
     newView = view()

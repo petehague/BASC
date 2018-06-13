@@ -240,7 +240,10 @@ class view():
         xydata[:,1]=result['y'].data
         fluxdata = result['F'].data
         atom, xy, flux, noise, labels, centers, widths = clustering.find_center(xydata, fluxdata, maxk, min_samples, eps)
-        clout = Table([centers[:,0],centers[:,1],widths[:,0],widths[:,1]],names=("x", "y", "dx", "dy"))
+        F = []
+        for fluxlist in flux:
+            F.append(np.mean(fluxlist))
+        clout = Table([centers[:,0],centers[:,1],widths[:,0],widths[:,1], F],names=("x", "y", "dx", "dy", "F"))
         return clout,len(noise)
         
 

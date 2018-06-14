@@ -21,3 +21,6 @@ result = newView.getChain()
 
 result.write("chain.txt", format="ascii")
 print("Models written to chain.txt")
+
+print("Sources detected:")
+print(newView.clusters())

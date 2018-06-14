@@ -17,10 +17,11 @@ newView.loadPBCor("ex_flux.fits")
 newView.run()
 result = newView.getChain()
 
-# Add in any processing of results here
+print("Evidence: {}".format(newView.getEvidence()))
+print("RMS residual: {}".format(newView.getRMS()))
 
-result.write("chain.txt", format="ascii")
+result.write("chain.txt", format="ascii", overwrite=True)
 print("Models written to chain.txt")
 
 print("Sources detected:")
-print(newView.clusters())
+print(newView.clusters(eps=3)[0])

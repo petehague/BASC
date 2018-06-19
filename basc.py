@@ -113,6 +113,7 @@ class view():
         self.dmap = []
         self.dbeam = []
         self.pbcor = []
+        self.mapname = ""
 
 
     def loadFitsFile(self, filename, index):
@@ -137,6 +138,7 @@ class view():
 
     def loadMap(self,filename):
         self.loadFitsFile(filename, 0)
+        self.mapname = filename
 
     def loadBeam(self,filename):
         self.loadFitsFile(filename, 1)
@@ -221,6 +223,13 @@ class view():
 
     def getResid(self):
         return self.resid
+
+    def saveResid(self, filename):
+        source = fits.open(self.mapname)
+        newimage = np.ndarray(shape=(1,1, self.mx, self.my),dtype=float,buffer=cutin(self.resid))
+        if os.path.exists(filename):
+            os.remove(filename)
+        fits.writeto(filename,newimage,source[0].header)       
 
     def clusters(self, min_samples=10, eps=2):
         result = self.getChain()

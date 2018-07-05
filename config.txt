@@ -5,5 +5,5 @@ Valency = 0
 Iseed = 4321
 Ensemble = 20
 Method = 127
-Rate = 1
+Rate = 0.5 
 maxmodels = 300

@@ -257,13 +257,16 @@ class view():
         
 
 if __name__ == "__main__":
-    newView = view()
-    print("Load Image")
-    newView.loadMap("ex_image.fits")
-    print("Load PSF")
-    newView.loadBeam("ex_psf.fits")
-    print("Load Primary Beam")
-    newView.loadPBCor("ex_flux.fits")
-    newView.showall()
-    print("Run BASC")
-    newView.run()
+    if len(sys.argv)<4:
+        print("basc.py <dirty image> <dirty beam> <primary beam flux>")
+    else:
+       newView = view()
+       print("Load Image "+sys.argv[1])
+       newView.loadMap(sys.argv[1])
+       print("Load PSF "+sys.argv[2])
+       newView.loadBeam(sys.argv[2])
+       print("Load Primary Beam "+sys.argv[3])
+       newView.loadPBCor(sys.argv[3])
+       newView.showall()
+       print("Run BASC")
+       newView.run()

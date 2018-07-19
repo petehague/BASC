@@ -137,7 +137,7 @@ if __name__ == "__main__":
     d = []
     ang = []
     filename = str(input('Enter the MCMC result file name:\n'))
-    samples = int(input('Enter the minimum group number (you can try to start with 10):\n'))
+    samples = int(input('Enter the min_samples (you can try to start with 10):\n'))
     cluster_size = float(input('Enter the min_cluster_size (you can try to start with 30):\n'))
 
     # 2. Clustering process

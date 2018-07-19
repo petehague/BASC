@@ -1,5 +1,5 @@
 '''
-   Author: Zoe Ye
+   Author: Haoyang Ye (Zoe)
 '''
 
 
@@ -182,7 +182,7 @@ if __name__ == "__main__":
     plt.xlabel('Image plane x axis')
     plt.ylabel('Image plane y axis')
     plt.gca().set_aspect('equal', adjustable='box')
-    figname = filename + '_DBSCAN_clustering_results.png'
+    figname = filename + '_DBSCAN_clustering_auto_results.png'
     plt.savefig(figname)
 
     if atom == 2:

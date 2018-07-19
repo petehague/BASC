@@ -1,7 +1,7 @@
 '''
 
-   Author: Zoe Ye
-   
+   Author: Haoyang Ye (Zoe)
+
 '''
 
 import numpy as np
@@ -100,8 +100,8 @@ if __name__ == "__main__":
     d = []
     ang = []
     filename = str(input('Enter the result file name:\n'))
-    min_samples = int(input('Enter the minimum group number (you can try to start with 10):\n'))
-    eps = float(input('Enter the searching distance for each group (you can try to start with 1):\n'))
+    min_samples = int(input('Enter min_samples (you can try to start with 10):\n'))
+    eps = float(input('Enter eps (you can try to start with 1):\n'))
 
     # 2. Clustering process
     # 2.1 Read in data
@@ -131,12 +131,13 @@ if __name__ == "__main__":
         print ('You need to increase the variable min_samples or/and increase the variable eps')
         print (atom, 'is even bigger than the possible biggest atom number', atom_max)
     again = str(input('Do you want to change variables and try again? (y/n):'))
-    while again == 'Y' or 'y':
-        min_samples = int(input('Enter the minimum group number:\n'))
-        eps = float(input('Enter the searching distance for each group:\n'))
+    print (again)
+    while (again == 'Y' or again == 'y'):
+        min_samples = int(input('Enter min_samples:\n'))
+        eps = float(input('Enter eps:\n'))
         atom, xy, flux, noise, labels, centers, widths = find_center(Data_vxy, Flux, atom_max, min_samples, eps)
         again = str(input('Do you want to change variables and try again? (y/n):'))
-        if again == 'n' or 'N':
+        if (again == 'N' or again == 'n'):
             break
     print ('You chose eps = ', eps, ' and min_samples = ', min_samples, '\n')
     if atom == 2:

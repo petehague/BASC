@@ -137,7 +137,7 @@ if __name__ == "__main__":
     d = []
     ang = []
     filename = str(input('Enter the MCMC result file name:\n'))
-    samples = int(input('Enter the minimum group number (you can try to start with 10):\n'))
+    samples = int(input('Enter the min_samples (you can try to start with 10):\n'))
     cluster_size = float(input('Enter the min_cluster_size (you can try to start with 30):\n'))
 
     # 2. Clustering process
@@ -163,7 +163,6 @@ if __name__ == "__main__":
     print ('atom_max', atom_max)
     # 2.3 Start HDBSCAN algorithm
     atom, xy, noise, labels, centers, widths = find_center_atom(Data_vxy, atom_max, int(cluster_size), int(samples))
-    print ('We find', atom, 'atoms\n')
     # 2.4 Plot the results and save ############
     plt.figure()
     plt.scatter(noise.transpose()[0], noise.transpose()[1], s = 20, c = 'k', label = "Outlier")

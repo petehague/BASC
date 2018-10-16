@@ -110,6 +110,8 @@ class view():
         self.cdelt2 = 0
         self.cindex= bascmod.new()
         self.resid = []
+        self.propmap = []
+        self.fluxmap = []
         self.dmap = []
         self.dbeam = []
         self.pbcor = []
@@ -210,13 +212,14 @@ class view():
         xygrid /= ncells
         xygrid = np.rot90(xygrid)
         xygrid = np.fliplr(xygrid)
+        self.fluxmap = cutout(xygrid)
 
         ftbeam = np.fft.fft2(arrshift(self.dbeam))
         ftpoints = np.fft.fft2(xygrid)
         convmap = ftbeam*ftpoints
-        propmap = np.fft.fft2(convmap).real
+        self.propmap = cutout(np.fft.fft2(convmap).real)
 
-        self.resid = cutout(self.dmap)-cutout(propmap)
+        self.resid = cutout(self.dmap)-self.propmap
         rms = np.std(self.resid)
 
         return rms
@@ -227,6 +230,20 @@ class view():
     def saveResid(self, filename):
         source = fits.open(self.mapname)
         newimage = np.ndarray(shape=(1,1, self.mx, self.my),dtype=float,buffer=cutin(self.resid))
+        if os.path.exists(filename):
+            os.remove(filename)
+        fits.writeto(filename,newimage,source[0].header)       
+
+    def saveResult(self, filename):
+        source = fits.open(self.mapname)
+        newimage = np.ndarray(shape=(1,1, self.mx, self.my),dtype=float,buffer=cutin(self.fluxmap))
+        if os.path.exists(filename):
+            os.remove(filename)
+        fits.writeto(filename,newimage,source[0].header)       
+
+    def saveProp(self, filename):
+        source = fits.open(self.mapname)
+        newimage = np.ndarray(shape=(1,1, self.mx, self.my),dtype=float,buffer=cutin(self.propmap))
         if os.path.exists(filename):
             os.remove(filename)
         fits.writeto(filename,newimage,source[0].header)       

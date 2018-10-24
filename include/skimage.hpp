@@ -58,6 +58,7 @@ public:
   void scan(uint32_t psize, double threshold, double stdev);
   void crop(uint32_t nx, uint32_t ny);
   void pad(uint32_t dx, uint32_t dy, double contents);
+  double deconobject(skimage &other, skimage &pbeam, uint32_t *rax, uint32_t *ray, double *pa, double *min, double *maj, double *flux, uint64_t n);
   double deconv(skimage &other, twov *points, double *flux, uint64_t n);
   double deconv(skimage &other, skimage &pbeam, twov *points, double *flux, double *fmu, double *fsig, uint64_t n);
   double deconv(skimage &other, skimage &pbeam, uint32_t *ax, uint32_t *ay, double *flux, uint64_t n);

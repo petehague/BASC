@@ -311,6 +311,76 @@ void skimage::pad(uint32_t dx, uint32_t dy, double contents) {
   delete oldbuffer;
 }
 
+double *makekern(uint32_t ax, uint32_t ay, double pa, double maj, double min) {
+  double *result;
+  uint32_t cx = ax*0.5;
+  uint32_t cy = ay*0.5;
+  double rsq, flux, u, v;
+
+  maj *= maj;
+  min *= min;
+
+  result = new double(ax*ay); 
+  for (uint32_t y=0;y<ay;y++) {
+    for (uint32_t x=0;x<ax;x++) {
+      u = (x-cx)*cos(pa) - (y-cy)*sin(pa);
+      v = (x-cx)*sin(pa) + (y-cy)*cos(pa);
+      rsq = u*u/maj + v*v/min;
+      if (rsq>1) {
+        flux = -1;
+      } else { 
+        flux = exp(-rsq/2.);
+      }
+      result[y*ax+x] = flux;
+    }
+  }  
+
+  return result;
+}
+
+double skimage::deconobject(skimage &other, skimage &pbeam, uint32_t *rax, uint32_t *ray, double *pa, double *min, double *maj, double *flux, uint64_t n) {
+  double result = 0;
+  vector <double> ourflux,ax,ay;
+  uint32_t cx = other.getxsize()*0.5;
+  uint32_t cy = other.getysize()*0.5;
+  uint32_t kx, ky;
+  double *kern;
+
+  for (uint64_t i=0;i<n;i++) {
+    //if (maj[n]>10) { maj[n]=10; }
+    //if (min[n]>10) { min[n]=10; }
+    kx = sqrt(-2.*maj[n]*maj[n]*log(noiseLevel/flux[n]));
+    ky = kx;
+    kern = makekern(2*kx, 2*ky, pa[n], maj[n], min[n]);
+    for (uint32_t y=0;y<ky*2;y++) {
+      for (uint32_t x=0;x<kx*2;x++) {
+        if (kern[y*2*kx+x]>-1) {
+          ourflux.push_back(flux[n]*kern[y*2*kx+x]);
+          ax.push_back(x+rax[n]-kx);
+          ay.push_back(y+ray[n]-ky);
+        }
+      }
+    delete kern;
+    }
+  }
+  n = ourflux.size();
+
+  for (uint64_t i=0;i<n;i++) {
+    ourflux[i]*=pbeam.get(ax[i],ay[i],0);
+  }
+
+  for (uint64_t i=0;i<n;i++) {
+    result -= 2.0*ourflux[i]*buffer[coords(ax[i],ay[i],0)];
+    for (uint64_t k=0;k<n;k++) {
+      uint32_t u = cx - (ax[k]-ax[i]);
+      uint32_t v = cy - (ay[k]-ay[i]);
+      result += ourflux[i]*ourflux[k]*other.get(u,v,0);
+    }
+  }
+
+  return -0.5*result/(noiseLevel*noiseLevel);
+}
+
 //Basic evaluator
 double skimage::deconv(skimage &other, twov *points, double *flux, uint64_t n) {
   double result = 0;

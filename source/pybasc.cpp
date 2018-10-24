@@ -22,6 +22,7 @@ vector <double> evidence;
 uint32_t mapsize, mapdepth, modelIndex, maxmodels;
 double sigma, freqscale;
 bool cubeSwitch = false;
+uint16_t objmode = 0;
 optDict options;
 
 struct UserCommonStr {
@@ -38,6 +39,9 @@ struct UserCommonStr {
   vector <double> F;
   vector <double> fmu;
   vector <double> fsig;
+  vector <double> pa;
+  vector <double> min;
+  vector <double> maj;
   vector <double> lh;
   vector <uint32_t> modelIndex;
 };
@@ -56,9 +60,11 @@ int UserBuild(double *like, CommonStr *Common, ObjectStr* Member, int natoms, in
   vector <uint32_t> ax, ay;
   vector <double> fmu;
   vector <double> fsig;
+  vector <double> pa,maj,min;
   double **Cube = Member->Cubes;
   UserCommonStr *UC = (UserCommonStr *)Common->UserCommon;
   double fluxscale = UC->fluxscale;
+  double majoraxis;
 
   if (natoms==0) {
     *like = -1e6;
@@ -80,10 +86,21 @@ int UserBuild(double *like, CommonStr *Common, ObjectStr* Member, int natoms, in
       fmu.push_back(Cube[i][3]*freqscale);
       fsig.push_back(Cube[i][4]*freqscale);
     }
+    if (objmode==1) {
+      pa.push_back(Cube[i][3]*2.*M_PI);
+      majoraxis = Cube[i][4]/(1.-Cube[i][4]);
+      maj.push_back(majoraxis);
+      min.push_back(majoraxis*Cube[i][5]);
+    }
   }
 
   if (cubeSwitch) {
     *like = dirtyMap[UC->mapindex].deconv(dirtyBeam[UC->mapindex],primaryBeam[UC->mapindex],&points[0],&flux[0],&fmu[0],&fsig[0],flux.size());
+    return 1;
+  }
+
+  if (objmode==1) {
+    *like = dirtyMap[UC->mapindex].deconobject(dirtyBeam[UC->mapindex],primaryBeam[UC->mapindex],&ax[0],&ay[0],&pa[0],&maj[0],&min[0],&flux[0],flux.size());
     return 1;
   }
 
@@ -101,12 +118,13 @@ int UserMonitor(CommonStr *Common, ObjectStr *Members) {
   double **Cube;// = Members->Cubes;
   UserCommonStr *UC = (UserCommonStr *)Common->UserCommon;
   double fluxscale = UC->fluxscale;
+  double majoraxis;
 
   if (Common->cool > 1.) Common->cool = 1.;
   if (Common->cool < 1.) {
     UC->burnin += 1;
     if (Common->cool>UC->cool) {
-      //cout << Common->cool << " " << UC->burnin << endl;
+      cout << Common->cool << " " << UC->burnin << endl;
       UC->cool += 0.1;
     }
     return 0;
@@ -119,6 +137,9 @@ int UserMonitor(CommonStr *Common, ObjectStr *Members) {
     cout << "Burn in complete" << endl;
   }
   UC->nmodels += 1;
+  if (UC->nmodels % 1000 == 0) {
+    cout << "Model: " << UC->nmodels << endl;
+  }
   for (uint32_t k=0;k<Common->ENSEMBLE;k++) {
     Cube = Members[k].Cubes;
     for (uint32_t i=0;i<Members[k].Natoms;i++) {
@@ -129,6 +150,12 @@ int UserMonitor(CommonStr *Common, ObjectStr *Members) {
       if (cubeSwitch) {
         UC->fmu.push_back(Cube[i][3]*freqscale);
         UC->fsig.push_back(Cube[i][4]*freqscale);
+      }
+      if (objmode==1) {
+        UC->pa.push_back(Cube[i][3]*2.*M_PI);
+        majoraxis = Cube[i][4]/(1.-Cube[i][4]);
+        UC->maj.push_back(majoraxis);
+        UC->min.push_back(majoraxis*Cube[i][5]);
       }
       UC->modelIndex.push_back(modelIndex);
     }
@@ -270,6 +297,7 @@ static PyObject* bascmodule_setOption(PyObject *self, PyObject *args) {
   if (strcmp(key,"Method")==0) { Common.Method = atoi(value); }
   if (strcmp(key,"Rate")==0) { Common.Rate = atof(value); }
   if (strcmp(key,"maxmodels")==0) { maxmodels = atoi(value); }
+  if (strcmp(key,"objmode")==0) { objmode = atoi(value); }
 
   return PyLong_FromLong(1);
 }
@@ -331,6 +359,9 @@ static PyObject* bascmodule_run(PyObject *self, PyObject *args) {
   } else {
     Common.Ndim = 3;
   }
+  if (objmode == 1) {
+    Common.Ndim += 3;
+  }
 
   Common.cool = 0;
 
@@ -383,6 +414,9 @@ static PyObject* bascmodule_chain(PyObject *self, PyObject *args) {
     return returnList;
   }
   if (colIndex==4) { colPtr=UserCommon[cindex].lh; }
+  if (colIndex==5) { colPtr=UserCommon[cindex].pa; }
+  if (colIndex==6) { colPtr=UserCommon[cindex].maj; }
+  if (colIndex==7) { colPtr=UserCommon[cindex].min; }
 
   for (uint32_t i=0;i<UserCommon[cindex].nmodels;i++) {
     PyList_SetItem(returnList, i, PyFloat_FromDouble(colPtr[i]));

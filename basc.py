@@ -10,6 +10,8 @@ import clustering
 
 bascmod.init()
 
+bascopts = {}
+
 '''
 Utilities that don't invoke bascmod
 '''
@@ -21,9 +23,12 @@ def readConfig(filename):
         key = tokens[0].strip()
         value = tokens[1].strip()
         bascmod.option(key, value)
+        bascopts[key] = value
+
 
 def setOption(key, value):
     bascmod.option(key,"{}".format(value))
+    bascopts[key] = value;
 
 # TODO: This needs to be repaced with a faster interface
 def fitsraster(image, x, y):
@@ -177,6 +182,14 @@ class view():
         f = bascmod.chain(self.cindex,2)
         k = bascmod.chain(self.cindex,3)
         L = bascmod.chain(self.cindex,4)
+        if 'objmode' in bascopts:
+            if bascopts['objmode']==1:
+                pa = bascmod.chain(self.cindex,5)
+                major = bascmod.chain(self.cindex,6)
+                minor = bascmod.chain(self.cindex,7)
+                result = Table([x,y,f,k,L,pa,major,minor],
+                               names=('x','y','F','k','L','pa','maj','min'))
+                return result
         result = Table([x, y, f, k, L], names=('x', 'y', 'F', 'k', 'L'))
         return result
 

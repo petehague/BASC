@@ -23,7 +23,7 @@ pyskimage:
 	CXXFLAGS='-std=c++11' python setup.py build
 
 binfolder:
-	mkdir bin
+	mkdir -p bin
 
 clean:
 	rm -rf build

@@ -23,7 +23,7 @@ bin/pybasc.o: source/pybasc.cpp
 	$(CXX) -g -std=c++11 -c -DSTANDALONE source/pybasc.cpp -obin/pybasc.o
 
 pyskimage:
-	CC='$(CC)' CXX='$(CC)' CXX_STANDARD='-std=c++11' python3 setup.py build
+	CC='$(CC)' CXX='$(CXX)' CXX_STANDARD='-std=c++11' python3 setup.py build
 
 binfolder:
 	mkdir -p bin

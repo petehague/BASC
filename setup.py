@@ -17,8 +17,7 @@ bascmodule = Extension('bascmod',
                                 'bayesys/bayesys3.c', 'bayesys/random.c',
                                 'bayesys/hilbert.c', 'bayesys/app.c',
                                 'source/options.cpp'],
-                       language='c++',
-                       extra_compile_args=['-std=c++11'])
+                       language='c++')
 
 setup(ext_modules=[bascmodule])
 

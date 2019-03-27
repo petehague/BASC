@@ -2,7 +2,7 @@ CC = gcc
 CXX = g++
 CPPFLAGS = -std=c++11 
 
-all: pyskimage mcmc pytest
+all: pyskimage
 	@echo Make Complete
 
 pytest: bin/pybasc.o bin/skimage.o bayesys/bayesys3.o bayesys/random.o bayesys/hilbert.o bayesys/app.o bin/options.o
@@ -10,6 +10,9 @@ pytest: bin/pybasc.o bin/skimage.o bayesys/bayesys3.o bayesys/random.o bayesys/h
 
 mcmc: bin/mcmc.o bin/skimage.o bayesys/bayesys3.o bayesys/random.o bayesys/hilbert.o bayesys/app.o bin/options.o
 	$(CXX) -g -std=c++11 bin/mcmc.o bin/skimage.o bayesys/bayesys3.o bayesys/random.o bayesys/hilbert.o bin/options.o bayesys/app.o -omcmc
+
+bin/pybasc.o: source/pybasc.cpp binfolder
+	$(CXX) $(CPPFLAGS) -DSTANDALONE -c source/pybasc.cpp -obin/pybasc.o
 
 bin/%.o: source/%.cpp binfolder
 	$(CXX) $(CPPFLAGS) $< -c -o$@

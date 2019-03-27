@@ -1,3 +1,5 @@
+#define STANDALONE
+
 #ifndef STANDALONE
 #include <Python.h>
 #endif

@@ -1,8 +1,14 @@
 CC = gcc
 CXX = g++
-CPPFLAGS = -std=c++11 
+CPPFLAGS = -std=c++11
 
-all: pyskimage
+default: pyskimage
+	@echo Make Complete
+
+mac: pyskimage-mac
+	@echo Make Complete
+
+all: pyskimage pytest mcmc
 	@echo Make Complete
 
 pytest: bin/pybasc.o bin/skimage.o bayesys/bayesys3.o bayesys/random.o bayesys/hilbert.o bayesys/app.o bin/options.o
@@ -22,6 +28,10 @@ bayesys/%.o: bayesys/%.c
 
 pyskimage:
 	CC='$(CC)' CXX='$(CXX)' CXX_STANDARD='-std=c++11' python3 setup.py build
+
+pyskimage-mac:
+	CC='$(CC)' CXX='$(CXX)' CXX_STANDARD='-std=c++11' python3 macscript.py build
+
 
 binfolder:
 	mkdir -p bin

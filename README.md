@@ -4,9 +4,13 @@ BaSC is short for Bayesian Source Characterisation. It is an MCMC process that p
 
 It is based on a method developed by Steve Gull, and uses the BayeSys MCMC driver.
 
+### Installation ###
+
+BaSC requires a c compiler, Python 3, and the numpy and astropy libraries. On Linux, type `make` to compile the extension, or if using Mac, type 'make mac'. Currently Windows is not supported - you will have to run it in an Ubuntu terminal on a Windows machine. 
+
 ### Usage ###
 
-BaSC requires a c compiler and Python 3. On Linux/MacOS, type `make` to compile the library and BayeSys and then run the example script `example.py` in the BaSC folder. This should locate a single source in the centre of the map, and return the models from the burned in chain to `chain.txt`
+To try out BaSC, run the example script `example.py` in the BaSC folder. This should locate a single source in the centre of the map, and return the models from the burned in chain to `chain.txt`
 
 To run BaSC on your own data, use
 

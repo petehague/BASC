@@ -22,4 +22,4 @@ In general, import basc into your Python program and use it as shown in `example
 
 ### Contact ###
 
-For more information, please email Peter Hague at prh44 AT cam.ac.uk
+For more information, please email Peter Hague at peterhague AT protonmail.com

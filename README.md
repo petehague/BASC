@@ -6,7 +6,7 @@ It is based on a method developed by Steve Gull, and uses the BayeSys MCMC drive
 
 ### Installation ###
 
-BaSC requires a c compiler, Python 3, and the numpy and astropy libraries. On Linux, type `make` to compile the extension, or if using Mac, type 'make mac'. Currently Windows is not supported - you will have to run it in an Ubuntu terminal on a Windows machine. 
+BaSC requires a c compiler, Python 3, and the numpy, astropy and sklearn libraries. On Linux, type `make` to compile the extension, or if using Mac, type 'make mac'. Currently Windows is not supported - you will have to run it in an Ubuntu terminal on a Windows machine. 
 
 ### Usage ###
 
@@ -22,4 +22,4 @@ In general, import basc into your Python program and use it as shown in `example
 
 ### Contact ###
 
-For more information, please email Peter Hague at prh44 AT cam.ac.uk
+For more information, please email Peter Hague at peterhague AT protonmail.com

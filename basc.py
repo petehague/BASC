@@ -290,6 +290,7 @@ if __name__ == "__main__":
     if len(sys.argv)<4:
         print("basc.py <dirty image> <dirty beam> <primary beam flux>")
     else:
+       readConfig("config.txt")
        newView = view()
        print("Load Image "+sys.argv[1])
        newView.loadMap(sys.argv[1])
@@ -297,6 +298,13 @@ if __name__ == "__main__":
        newView.loadBeam(sys.argv[2])
        print("Load Primary Beam "+sys.argv[3])
        newView.loadPBCor(sys.argv[3])
-       newView.showall()
+       #newView.showall()
        print("Run BASC")
        newView.run()
+       result = newView.getChain()
+       print("Evidence: {}".format(newView.getEvidence()))
+       print("RMS residual: {}".format(newView.getRMS()))
+       result.write("chain.txt", format="ascii", overwrite=True)
+       print("Models written to chain.txt")
+       print("Sources detected:")
+       print(newView.clusters(eps=3)[0])

@@ -17,6 +17,10 @@ Utilities that don't invoke bascmod
 '''
 
 def readConfig(filename):
+    '''
+        readConfig
+        Reads in the configuration file for BASC
+    '''
     optionsfile = open(filename, "r")
     for line in optionsfile:
         tokens = re.split("=", line)
@@ -27,11 +31,20 @@ def readConfig(filename):
 
 
 def setOption(key, value):
+    '''
+        setOption
+        Used to set options
+    '''
     bascmod.option(key,"{}".format(value))
     bascopts[key] = value;
 
+
 # TODO: This needs to be repaced with a faster interface
 def fitsraster(image, x, y):
+    '''
+        fitsraster
+        Extracts the images from a fits file
+    '''
     result = []
     count = 0
     for v in range(y):
@@ -40,7 +53,12 @@ def fitsraster(image, x, y):
             count += 1
     return result
 
+
 def mapraster(rawmap):
+    '''
+        mapraster
+        Coverts one dimensional map two 2D
+    '''
     mapsize = int(np.sqrt(len(rawmap)))
     result = np.zeros(shape=(mapsize,mapsize))
     for y in range(mapsize):
@@ -48,7 +66,11 @@ def mapraster(rawmap):
             result[x,y] = rawmap[y*mapsize + x]
     return result
 
+
 def mapprof(maparr, limits=[0,0]):
+    '''
+        mapprof
+    '''
     if limits==[0,0]:
         maxval = np.max(maparr)
         minval = np.min(maparr)
@@ -62,7 +84,14 @@ def mapprof(maparr, limits=[0,0]):
             fbins[index]+=1
     return np.linspace(minval, maxval, num=100),fbins
 
+
 def arrshift(maparr):
+    '''
+        arrshift
+        moves the four corners of the map
+        AB      DC       
+        CD ---> BA
+    '''
     mx,my = maparr.shape
     newmap = np.zeros(maparr.shape)
     for y in range(my):
@@ -70,12 +99,23 @@ def arrshift(maparr):
             newmap[x,y] = maparr[int((x+mx/2)%mx),int((y+my/2)%my)]
     return newmap
 
+
 def logimage(maparr):
+    '''
+        logimage
+        convert map to a log scale for display
+    '''
     minval = np.min(maparr)-1e-6
     maparr -= minval
     return np.log10(maparr)
 
+
 def cutin(maparr):
+    '''
+        cutin
+        Inserts the given map into the centre
+        of a map twice the size
+    '''
     nx,ny = maparr.shape
     nx = int(nx*2)
     ny = int(ny*2)
@@ -87,7 +127,13 @@ def cutin(maparr):
             result[x+offx,y+offy] = maparr[x,y]
     return result
 
+
 def cutout(maparr):
+    '''
+        cutout
+        Extracts the middle half sized map from
+        a larger map (reverse of cutin)
+    '''
     nx,ny = maparr.shape
     nx = int(nx/2)
     ny = int(ny/2)
@@ -100,7 +146,12 @@ def cutout(maparr):
     return result
 
 '''
-The class that encapsulates all bascmod calls
+view
+
+This class encapsulates all bascmod calls
+Each view is a complete set of data required to 
+perform the source detection; map, beam, and 
+primary beam if needed
 '''
 
 class view():
@@ -124,6 +175,12 @@ class view():
 
 
     def loadFitsFile(self, filename, index):
+        '''
+            loadFitsFile
+            loads in a map and converts from fits
+            to internal format, then stores it in
+            the C library
+        '''
         source = fits.open(filename)
         self.mx = source[0].header['NAXIS1']
         self.my = source[0].header['NAXIS2']
@@ -154,29 +211,64 @@ class view():
         self.loadFitsFile(filename, 2)
 
     def blankPBCor(self,mx, my):
+        '''
+            blankPBCor
+            Provide a blank primary beam, if the user does not supply one
+        '''
         bascmod.map(self.cindex, np.ones(shape=(mx * my)).tolist(), mx, my, 2)
 
     def setNoise(self, noise):
+        '''
+            setNoise
+            Set the expected noise level for the calculation
+        '''
         bascmod.noise(self.cindex, noise)
 
     def setFlux(self, flux):
+        '''
+            setFlux
+            Set the flux level, which will be the centre of the prior
+            range of the flux
+        '''
         bascmod.flux(self.cindex, flux)
 
     def map(self,index):
+        '''
+            map
+            Wrapper for mapraster. Returns the map in a useful Python format
+        '''
         return mapraster(bascmod.getmap(self.cindex, index))
 
     def run(self):
+        '''
+            run
+            Initiates the BASC run once everything is configured
+        '''
         return bascmod.run(self.cindex)
 
     def showall(self):
+        '''
+            showall
+            Display map, psf and primary beam as ascii art
+            Not suitible for publication!
+        '''
         bascmod.show(self.cindex,0)
         bascmod.show(self.cindex,1)
         bascmod.show(self.cindex,2)
 
     def getEvidence(self):
+        '''
+            getEvidence
+            Return the evidence (denominator in Bayes theorem)
+            after a successful run
+        '''
         return bascmod.evidence(self.cindex)
 
     def getChain(self):
+        '''
+            getChain
+            Return the actual Markov chain produced by the calculation
+        '''
         x = bascmod.chain(self.cindex,0)
         y = bascmod.chain(self.cindex,1)
         f = bascmod.chain(self.cindex,2)
@@ -194,6 +286,10 @@ class view():
         return result
 
     def getSlice(self,k):
+        '''
+            getSlice
+            Return a subset of the chain
+        '''
         result = self.getChain()
         models = result.group_by('k')
         mask = []
@@ -205,6 +301,11 @@ class view():
         return result[mask]
 
     def getRMS(self):
+        '''
+            getRMS
+            calculate the RMS noise on the residual after
+            a successful BASC run
+        '''
         result = self.getChain()
 
         xygrid = np.zeros(shape=self.dbeam.shape)
@@ -238,9 +339,18 @@ class view():
         return rms
 
     def getResid(self):
+        '''
+            getResid
+            Return the residual map, as calculated by getRMS()
+        '''
         return self.resid
 
     def saveResid(self, filename):
+        '''
+            saveResid
+            Write the residual map (dirty map minus proposed points)
+            to a fits file using the same header as the orginal map
+        '''
         source = fits.open(self.mapname)
         newimage = np.ndarray(shape=(1,1, self.mx, self.my),dtype=float,buffer=cutin(self.resid))
         if os.path.exists(filename):
@@ -248,6 +358,10 @@ class view():
         fits.writeto(filename,newimage,source[0].header)       
 
     def saveResult(self, filename):
+        '''
+            saveResult
+            Writes a map of the flux proposed by BASC to a fits file
+        '''
         source = fits.open(self.mapname)
         newimage = np.ndarray(shape=(1,1, self.mx, self.my),dtype=float,buffer=cutin(self.fluxmap))
         if os.path.exists(filename):
@@ -255,6 +369,11 @@ class view():
         fits.writeto(filename,newimage,source[0].header)       
 
     def saveProp(self, filename):
+        '''
+            saveProp
+            Writes a map of the proposal points (not convolved) to a fits file
+            this is for understanding what BASC did, its not the actual result
+        '''
         source = fits.open(self.mapname)
         newimage = np.ndarray(shape=(1,1, self.mx, self.my),dtype=float,buffer=cutin(self.propmap))
         if os.path.exists(filename):
@@ -262,6 +381,11 @@ class view():
         fits.writeto(filename,newimage,source[0].header)       
 
     def clusters(self, min_samples=10, eps=2):
+        '''
+            clusters
+            Use clustering algorithm to identify MCMC proposals to actual
+            sources
+        '''
         result = self.getChain()
         lastk = -1
         maxk = 0
